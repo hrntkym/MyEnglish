@@ -324,21 +324,22 @@
     </div>
   </div>
 
-  <!-- Family Passcode Lock Screen Overlay -->
-  <div id="family-lock-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 p-4 backdrop-blur-md">
-    <div class="w-full max-w-sm rounded-2xl border border-slate-700 bg-white p-6 text-center shadow-2xl">
-      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-2xl">🔒</div>
-      <h2 class="mt-3 text-base font-bold text-slate-900">家族専用 MyEnglish ロック</h2>
-      <p class="mt-1 text-xs text-slate-500">合言葉を入力してロックを解除してください（1回解除するとこの端末に記憶されます）</p>
+  <!-- Family Passcode Lock Screen Overlay (デフォルトで全画面を完全に覆い隠し、合言葉認証後のみ解除) -->
+  <div id="family-lock-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950 p-4">
+    <div class="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-7 text-center shadow-2xl">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/20 text-2xl">🔒</div>
+      <h2 class="mt-3 text-base font-bold text-white">Private Access</h2>
+      <p class="mt-1 text-xs text-slate-400">合言葉を入力してください（1回解除するとこの端末に記憶されます）</p>
       <form onsubmit="unlockFamilyScreen(event)" class="mt-4 space-y-3">
         <input
           id="family-unlock-input"
           type="password"
-          placeholder="合言葉を入力..."
-          class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-center text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none"
+          autocomplete="off"
+          placeholder="Passcode..."
+          class="w-full rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-center text-sm font-bold text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
         />
-        <p id="family-unlock-error" class="hidden text-xs font-bold text-rose-600">合言葉が違います</p>
-        <button type="submit" class="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-700">
+        <p id="family-unlock-error" class="hidden text-xs font-bold text-rose-400">合言葉が違います</p>
+        <button type="submit" class="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition">
           ロック解除
         </button>
       </form>
@@ -3671,12 +3672,37 @@ ${challenge.modelAnswerEn ? `【参考模範解答】: ${challenge.modelAnswerEn
       reader.readAsText(file);
     }
 
+    const BUILTIN_FAMILY_PASSCODE_HASH = '1ef8a564115ab7';
+
+    function computePasscodeHash(str) {
+      let h1 = 0xdeadbeef ^ str.length;
+      let h2 = 0x41c6ce57 ^ str.length;
+      for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+    }
+
+    function isValidFamilyPasscode(inputStr, cfg) {
+      const trimmed = String(inputStr || '').trim();
+      if (!trimmed) return false;
+      if (computePasscodeHash(trimmed) === BUILTIN_FAMILY_PASSCODE_HASH) return true;
+      if (cfg && cfg.familyPasscode && trimmed === cfg.familyPasscode) return true;
+      return false;
+    }
+
     function checkFamilyPasscodeLock() {
       const cfg = loadSyncConfig();
-      if (!cfg.familyPasscode) return;
-      const unlocked = localStorage.getItem(FAMILY_UNLOCKED_STORAGE);
-      if (unlocked !== cfg.familyPasscode) {
-        document.getElementById('family-lock-overlay').classList.remove('hidden');
+      const savedToken = localStorage.getItem(FAMILY_UNLOCKED_STORAGE) || '';
+      const overlay = document.getElementById('family-lock-overlay');
+      if (savedToken === BUILTIN_FAMILY_PASSCODE_HASH || (cfg.familyPasscode && savedToken === cfg.familyPasscode)) {
+        if (overlay) overlay.classList.add('hidden');
+      } else {
+        if (overlay) overlay.classList.remove('hidden');
       }
     }
 
@@ -3685,8 +3711,11 @@ ${challenge.modelAnswerEn ? `【参考模範解答】: ${challenge.modelAnswerEn
       const cfg = loadSyncConfig();
       const val = (document.getElementById('family-unlock-input').value || '').trim();
       const errEl = document.getElementById('family-unlock-error');
-      if (val === cfg.familyPasscode) {
-        localStorage.setItem(FAMILY_UNLOCKED_STORAGE, val);
+      if (isValidFamilyPasscode(val, cfg)) {
+        localStorage.setItem(
+          FAMILY_UNLOCKED_STORAGE,
+          computePasscodeHash(val) === BUILTIN_FAMILY_PASSCODE_HASH ? BUILTIN_FAMILY_PASSCODE_HASH : val
+        );
         document.getElementById('family-lock-overlay').classList.add('hidden');
         if (errEl) errEl.classList.add('hidden');
       } else {
