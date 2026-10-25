@@ -1,0 +1,3708 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="MyEnglish" />
+  <link rel="icon" type="image/svg+xml" href="./public/icons/icon.svg" />
+  <link rel="apple-touch-icon" href="./public/icons/icon.svg" />
+  <link rel="manifest" href="./public/manifest.webmanifest" />
+  <title>MyEnglish — 深掘り英単語・語源・ニュアンス辞書 (Standalone Demo)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-serif-en {
+      font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+  <!-- Header -->
+  <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-sm">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold tracking-tight text-slate-900 sm:text-xl">MyEnglish</h1>
+            <span class="hidden sm:inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
+              Mac & スマホPWA対応
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">発音・語源・英英定義・派生語・ニュアンスまで深掘りする英単語学習</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Main Navigation Tabs -->
+        <div class="flex items-center rounded-xl border border-slate-200 bg-slate-100/80 p-1">
+          <button id="nav-search-btn" type="button" onclick="switchMainView('search')" class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition">
+            <span>🔍 単語検索</span>
+          </button>
+          <button id="nav-vocab-btn" type="button" onclick="switchMainView('vocabulary')" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition">
+            <span>📚 マイ単語帳</span>
+            <span id="saved-count-badge" class="rounded-full bg-indigo-100 px-1.5 py-0.5 text-[11px] font-extrabold text-indigo-700">0</span>
+          </button>
+        </div>
+
+        <button id="open-sync-modal-btn" type="button" onclick="openSyncModal()" class="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/80 px-3 py-2 text-xs font-semibold text-indigo-800 hover:bg-indigo-100 transition">
+          <span id="sync-status-dot" class="h-2 w-2 rounded-full bg-slate-400"></span>
+          <span id="sync-status-label">☁️ 同期・家族設定</span>
+        </button>
+
+        <button id="open-api-modal-btn" type="button" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200/70 transition">
+          <span id="api-status-dot" class="h-2 w-2 rounded-full bg-indigo-500"></span>
+          <span id="api-status-label">AI設定</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SEARCH VIEW WRAPPER -->
+  <div id="search-view-wrapper">
+    <!-- Search Section -->
+    <section class="mx-auto max-w-5xl px-4 pt-6 pb-2 sm:px-6">
+      <div class="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm sm:p-6">
+        <form id="search-form" class="flex flex-col gap-3 sm:flex-row">
+          <div class="relative flex-1">
+            <input
+              id="search-input"
+              type="text"
+              placeholder="英単語・フレーズを入力（例: ubiquitous, a piece of cake, resilient...）"
+              class="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-3.5 pl-4 pr-10 text-base font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
+            />
+            <button id="clear-input-btn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:text-slate-600" title="クリア">
+              ✕
+            </button>
+          </div>
+          <button id="submit-btn" type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-indigo-700 transition">
+            <span>深掘り！！</span>
+          </button>
+        </form>
+
+        <div class="mt-4 flex flex-wrap items-center gap-1.5">
+          <span class="mr-1 text-xs font-semibold text-slate-500">✨ おすすめ語源解説:</span>
+          <div id="preset-chips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <div id="history-bar" class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3"></div>
+      </div>
+    </section>
+
+    <!-- Error Alert -->
+    <div id="error-box" class="hidden mx-auto mt-3 max-w-5xl px-4 sm:px-6">
+      <div id="error-text" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800"></div>
+    </div>
+
+    <!-- Non-blocking AI Progress Banner -->
+    <div id="ai-loading-banner" class="hidden mx-auto mt-3 max-w-5xl px-4 sm:px-6"></div>
+
+    <!-- Word Detail Cards Container -->
+    <main id="detail-container" class="mx-auto max-w-5xl space-y-5 px-4 py-4 pb-16 sm:px-6"></main>
+  </div>
+
+  <!-- VOCABULARY LIST VIEW WRAPPER -->
+  <div id="vocabulary-view-wrapper" class="hidden">
+    <main id="vocabulary-container" class="mx-auto max-w-5xl space-y-5 px-4 py-6 pb-16 sm:px-6"></main>
+  </div>
+
+  <!-- REVIEW SESSION (TEST & WRITING) VIEW WRAPPER -->
+  <div id="review-session-view-wrapper" class="hidden">
+    <main id="review-session-container" class="mx-auto max-w-4xl space-y-5 px-4 py-6 pb-16 sm:px-6"></main>
+  </div>
+
+  <!-- SPELLING CHALLENGE (COMPLETED -> MASTER) VIEW WRAPPER -->
+  <div id="spell-challenge-view-wrapper" class="hidden">
+    <main id="spell-challenge-container" class="mx-auto max-w-3xl space-y-5 px-4 py-6 pb-16 sm:px-6"></main>
+  </div>
+
+  <!-- API Key Modal -->
+  <div id="api-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h2 class="text-base font-bold text-slate-900">Gemini API 設定（AIリアルタイム生成）</h2>
+        <button id="close-modal-btn" type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100">✕</button>
+      </div>
+      <form id="api-form" class="mt-4 space-y-4">
+        <p class="text-xs leading-relaxed text-slate-600">
+          Gemini API キーを入力すると、プリセット外のあらゆる英単語・熟語も <strong>gemini-3.8-flash</strong> がリアルタイムで語源・英英定義・ニュアンス解説を生成します。未設定でもリッチモック＆形態素解析フォールバックで動作します。
+        </p>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700">Gemini API Key</label>
+          <input id="api-key-input" type="password" placeholder="AIzaSy..." class="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 font-mono text-sm" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button id="clear-key-btn" type="button" class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700">クリア</button>
+          <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700">保存して適用</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center gap-2.5 text-rose-600">
+        <span class="text-xl">⚠️</span>
+        <h2 class="text-base font-bold text-slate-900">本当にこの単語を削除しますか？</h2>
+      </div>
+      <p id="delete-confirm-desc" class="mt-3 text-xs leading-relaxed text-slate-600"></p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="cancel-delete-btn" type="button" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+          キャンセル
+        </button>
+        <button id="confirm-delete-btn" type="button" class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700">
+          削除する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unsaved Word Confirmation Modal -->
+  <div id="unsaved-confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📌</span>
+          <h2 class="text-base font-bold text-slate-900">この単語を保存しなくて良いですか？</h2>
+        </div>
+        <button id="cancel-unsaved-btn" type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100">✕</button>
+      </div>
+      <p id="unsaved-confirm-desc" class="mt-3 text-xs leading-relaxed text-slate-600"></p>
+
+      <div class="mt-4 space-y-2">
+        <p class="text-[11px] font-bold text-slate-500">保存して移動する（ステータスを選択）:</p>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <button type="button" onclick="confirmSaveAndProceed('quick')" class="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-left text-xs font-bold text-amber-950 hover:bg-amber-100 transition">
+            <span>⚡</span>
+            <span>Quick保存</span>
+          </button>
+          <button type="button" onclick="confirmSaveAndProceed('reviewing')" class="flex items-center gap-2 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-2.5 text-left text-xs font-bold text-indigo-950 hover:bg-indigo-100 transition">
+            <span>🔄</span>
+            <span>Reviewing保存</span>
+          </button>
+          <button type="button" onclick="confirmSaveAndProceed('completed')" class="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-left text-xs font-bold text-emerald-950 hover:bg-emerald-100 transition">
+            <span>🏆</span>
+            <span>Completed保存</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+        <button id="back-unsaved-btn" type="button" class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          キャンセル（元の単語に留まる）
+        </button>
+        <button id="proceed-without-save-btn" type="button" class="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white hover:bg-slate-900">
+          保存せずに次へ進む →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Span Selection Modal (Reviewing追加・移動時のスパン選択ポップアップ) -->
+  <div id="review-span-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
+    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2 text-indigo-600">
+          <span class="text-lg">📅</span>
+          <h2 class="text-base font-bold text-slate-900">復習スパンを選択してください</h2>
+        </div>
+        <button type="button" onclick="closeReviewSpanModal()" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100">✕</button>
+      </div>
+      <p id="review-span-modal-desc" class="mt-3 text-xs leading-relaxed text-slate-600"></p>
+      <div id="review-span-options-box" class="mt-4 space-y-2"></div>
+      <div class="mt-5 flex justify-end border-t border-slate-100 pt-3">
+        <button type="button" onclick="closeReviewSpanModal()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+          キャンセル
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud Sync & Family Profile Modal -->
+  <div id="sync-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs overflow-y-auto">
+    <div class="my-8 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">☁️</span>
+          <h2 class="text-base font-bold text-slate-900">Mac ⇄ iPhone クラウド同期 ＆ 家族ユーザー設定</h2>
+        </div>
+        <button type="button" onclick="closeSyncModal()" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100">✕</button>
+      </div>
+
+      <form id="sync-form" onsubmit="saveSyncSettingsAndSync(event)" class="mt-4 space-y-4">
+        <!-- 1. 使う人の名前（ユーザーID） -->
+        <div class="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5">
+          <label for="sync-profile-input" class="block text-xs font-bold text-indigo-950">
+            👤 1. 使う人の名前（ユーザー名 / プロファイルID）
+          </label>
+          <p class="mt-1 text-[11px] leading-relaxed text-indigo-800">
+            ・あなたの <strong>Mac と iPhone で同じ名前（例: <code class="font-mono font-bold">haruna</code>）</strong> にすると、2台のデータが自動で同期されます！<br/>
+            ・ご家族3人はそれぞれのスマホで <strong>別々の名前（例: <code class="font-mono font-bold">mom</code>, <code class="font-mono font-bold">dad</code>, <code class="font-mono font-bold">sister</code>）</strong> にすると、データが混ざらず自分専用のオリジナル辞書になります！
+          </p>
+          <input
+            id="sync-profile-input"
+            type="text"
+            placeholder="例: haruna"
+            class="mt-2 w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none"
+          />
+        </div>
+
+        <!-- 2. GitHub シークレット同期トークン -->
+        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+          <label for="sync-token-input" class="block text-xs font-bold text-slate-800">
+            🔑 2. GitHub クラウド同期トークン（Mac ⇄ iPhone を自動同期する方のみ）
+          </label>
+          <p class="mt-1 text-[11px] leading-relaxed text-slate-600">
+            GitHubの Personal Access Token（<code class="font-mono">gist</code> 権限）を1回入力しておくと、非公開の Secret Gist に全自動でバックアップ＆同期されます（未入力でもこの端末内に安全に保存されます）。
+          </p>
+          <input
+            id="sync-token-input"
+            type="password"
+            placeholder="ghp_... または github_pat_..."
+            class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 font-mono text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
+          />
+          <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+            <span id="sync-gist-status-text">同期ステータス: 未設定（端末内ローカル保存モード）</span>
+            <button type="button" onclick="triggerManualCloudPull()" class="font-bold text-indigo-600 hover:underline">
+              📥 クラウドから最新データを読み込む
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. 家族専用の合言葉ロック（任意） -->
+        <div class="rounded-xl border border-amber-200/80 bg-amber-50/40 p-3.5">
+          <label for="sync-passcode-input" class="block text-xs font-bold text-amber-950">
+            🔒 3. 家族専用の合言葉ロック（他人からのアクセス防止・任意）
+          </label>
+          <p class="mt-1 text-[11px] leading-relaxed text-amber-800">
+            設定すると、初回アクセス時にこの合言葉を入力しないとアプリを開けなくなります（空欄にするとロックなし）。
+          </p>
+          <input
+            id="sync-passcode-input"
+            type="text"
+            placeholder="例: うちの合言葉（空欄でロック解除）"
+            class="mt-2 w-full rounded-xl border border-amber-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:border-amber-500 focus:outline-none"
+          />
+        </div>
+
+        <!-- 手動ファイル書き出し・読み込み（予備バックアップ） -->
+        <div class="rounded-xl border border-slate-200 bg-white p-3.5">
+          <div class="text-xs font-bold text-slate-700">📦 手動バックアップ（ファイル保存 / 復元）</div>
+          <div class="mt-2 flex flex-wrap gap-2">
+            <button type="button" onclick="exportUserDataJson()" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">
+              📤 現在のデータをファイルに保存
+            </button>
+            <label class="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">
+              📥 バックアップファイルを読み込む
+              <input type="file" accept=".json" onchange="importUserDataJson(event)" class="hidden" />
+            </label>
+          </div>
+        </div>
+
+        <div id="sync-feedback-msg" class="hidden rounded-xl border px-3.5 py-2.5 text-xs font-semibold"></div>
+
+        <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
+          <button type="button" onclick="closeSyncModal()" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            閉じる
+          </button>
+          <button type="submit" id="sync-save-btn" class="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700">
+            💾 設定を保存して今すぐ同期
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Family Passcode Lock Screen Overlay -->
+  <div id="family-lock-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 p-4 backdrop-blur-md">
+    <div class="w-full max-w-sm rounded-2xl border border-slate-700 bg-white p-6 text-center shadow-2xl">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-2xl">🔒</div>
+      <h2 class="mt-3 text-base font-bold text-slate-900">家族専用 MyEnglish ロック</h2>
+      <p class="mt-1 text-xs text-slate-500">合言葉を入力してロックを解除してください（1回解除するとこの端末に記憶されます）</p>
+      <form onsubmit="unlockFamilyScreen(event)" class="mt-4 space-y-3">
+        <input
+          id="family-unlock-input"
+          type="password"
+          placeholder="合言葉を入力..."
+          class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-center text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-none"
+        />
+        <p id="family-unlock-error" class="hidden text-xs font-bold text-rose-600">合言葉が違います</p>
+        <button type="submit" class="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-700">
+          ロック解除
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const PRESET_WORDS = ['ubiquitous', 'ephemeral', 'resilient', 'serendipity', 'pragmatic', 'eloquent', 'inevitable', 'ambiguous', 'meticulous', 'profound'];
+
+    const MOCK_DB = {
+      ubiquitous: {
+        word: 'ubiquitous',
+        source: 'mock',
+        pronunciation: { ipa: '/juːˈbɪk.wə.təs/', ukIpa: '/juːˈbɪk.wɪ.təs/', syllables: 'u·biq·ui·tous', partOfSpeech: '形容詞 (Adjective)', phoneticHintJa: 'ユービィクウィタス（強勢は biq）' },
+        etymology: {
+          breakdown: [
+            { part: 'ubi-', role: '語根 (Root)', meaning: 'どこでも (where / everywhere)' },
+            { part: '-que', role: '結合辞', meaning: '〜でも、普遍的に (any / ever)' },
+            { part: '-ous', role: '接尾辞 (Suffix)', meaning: '〜の性質を持つ（形容詞化）' }
+          ],
+          originLanguage: 'ラテン語 ubique（どこにでも）',
+          coreImage: '「いつどこを見渡しても同時にそこに存在している」イメージ',
+          history: 'ラテン語の「ubi（どこに）」＋「que（〜でも）」から生まれた ubique が語源。元々は神学で「神の遍在」を指す言葉でしたが、現代ではスマートフォンやWi-Fiなど「日常の至る所で見かける当たり前のもの」を表す表現として使われます。'
+        },
+        meanings: [{
+          partOfSpeech: '形容詞',
+          jaMeaning: '至る所に存在する、どこにでもある、遍在する',
+          enDefinition: 'Seeming to be everywhere or in several places at the same time; very common and found everywhere.',
+          examples: [
+            { en: 'Smartphones have become ubiquitous in modern daily life.', ja: '現代の日常生活において、スマートフォンは至る所に存在する当たり前のものとなった。' },
+            { en: 'Coffee shops are now ubiquitous in major metropolitan areas.', ja: '今や大都市圏ではカフェがどこにでもある。' }
+          ]
+        }],
+        derivatives: {
+          forms: [
+            { partOfSpeech: '名詞', word: 'ubiquity', jaMeaning: '遍在、至る所にあること' },
+            { partOfSpeech: '副詞', word: 'ubiquitously', jaMeaning: '至る所に、どこにでも' }
+          ],
+          collocations: [
+            { phrase: 'ubiquitous presence of ~', preposition: 'of', meaning: '〜の至る所にある存在感', example: 'the ubiquitous presence of AI' },
+            { phrase: 'become ubiquitous in ~', preposition: 'in', meaning: '〜の分野・場所で当たり前の存在になる', example: 'EVs are becoming ubiquitous in Northern Europe.' }
+          ]
+        },
+        relations: {
+          synonyms: [
+            { word: 'omnipresent', jaMeaning: '常にどこにでも現れる', nuance: 'ubiquitous よりも格式高く、神・権力・見えない影響力などが「常にどこにでも臨在している」という厳粛な文脈で好まれます。' },
+            { word: 'pervasive', jaMeaning: '浸透している、充満している', nuance: '空気や匂い、文化、悪影響などが「じわじわと隅々まで入り込んで広がっている」ニュアンスを強調します。' },
+            { word: 'prevalent', jaMeaning: '広く行き渡っている、流行している', nuance: '特定の時代や地域において、習慣や現象が「優勢でよく見られる」ことを統計的・客観的に述べる際に使います。' }
+          ],
+          antonyms: [
+            { word: 'rare', jaMeaning: 'まれな、珍しい', nuance: '数が少なく滅多にお目にかかれない状態。しばしば価値の高さを伴います。' },
+            { word: 'scarce', jaMeaning: '乏しい、不足している', nuance: '本来必要な量に対して供給が足りず、手に入りにくい状態を指します。' }
+          ]
+        }
+      },
+      ephemeral: {
+        word: 'ephemeral',
+        source: 'mock',
+        pronunciation: { ipa: '/ɪˈfem.ər.əl/', ukIpa: '/ɪˈfem.ər.əl/', syllables: 'e·phem·er·al', partOfSpeech: '形容詞 (Adjective)', phoneticHintJa: 'イフェメラル（強勢は phem）' },
+        etymology: {
+          breakdown: [
+            { part: 'epi-', role: '接頭辞 (Prefix)', meaning: '〜の上に、〜の間 (on / during)' },
+            { part: 'hemera', role: '語根 (Root)', meaning: '1日 (day)' },
+            { part: '-al', role: '接尾辞 (Suffix)', meaning: '〜に関する（形容詞化）' }
+          ],
+          originLanguage: '古代ギリシャ語 ephēmeros（1日限りの）',
+          coreImage: '「たった1日で消えてしまうカゲロウや朝露のような儚（はかな）さ」',
+          history: 'ギリシャ語の「epi（〜の間）」＋「hemera（1日）」が語源で、元々は1日で命を終える昆虫「カゲロウ」や1日で散る花を指す言葉でした。転じて、SNSのトレンドや桜の季節など「美しくもすぐ消えてしまう短命なもの」を表す洗練された表現になりました。'
+        },
+        meanings: [{
+          partOfSpeech: '形容詞',
+          jaMeaning: 'つかの間の、儚（はかな）い、短命な、1日限りの',
+          enDefinition: 'Lasting for only a very short time; transitory and short-lived.',
+          examples: [
+            { en: 'Fame in the age of social media is often ephemeral.', ja: 'ソーシャルメディア時代における名声は、しばしばつかの間のものだ。' },
+            { en: 'Cherry blossoms are loved for their ephemeral beauty.', ja: '桜はその儚い美しさゆえに愛されている。' }
+          ]
+        }],
+        derivatives: {
+          forms: [
+            { partOfSpeech: '名詞', word: 'ephemerality', jaMeaning: '儚さ、一時的であること' },
+            { partOfSpeech: '副詞', word: 'ephemerally', jaMeaning: 'つかの間に' }
+          ],
+          collocations: [
+            { phrase: 'ephemeral nature of ~', preposition: 'of', meaning: '〜の儚い本質、移ろいやすさ', example: 'reflect on the ephemeral nature of youth' }
+          ]
+        },
+        relations: {
+          synonyms: [
+            { word: 'transient', jaMeaning: '一時的な、通過していく', nuance: 'ある場所に長く留まらず「通り過ぎていく（滞在期間が短い）」という移動・変化のニュアンスがあります。' },
+            { word: 'fleeting', jaMeaning: 'あっという間に過ぎ去る、一瞬の', nuance: '時間や感情が「飛ぶようにサッと走り去ってしまう」スピード感を強調します。' }
+          ],
+          antonyms: [
+            { word: 'permanent', jaMeaning: '永久の、恒久的な', nuance: '変化せずずっとそのままの状態が続くこと。' },
+            { word: 'eternal', jaMeaning: '永遠の、不滅の', nuance: '始まりも終わりもなく時間を超えて続くこと。' }
+          ]
+        }
+      },
+      resilient: {
+        word: 'resilient',
+        source: 'mock',
+        pronunciation: { ipa: '/rɪˈzɪl.jənt/', ukIpa: '/rɪˈzɪl.i.ənt/', syllables: 're·sil·ient', partOfSpeech: '形容詞 (Adjective)', phoneticHintJa: 'リズィリエント（強勢は sil）' },
+        etymology: {
+          breakdown: [
+            { part: 're-', role: '接頭辞 (Prefix)', meaning: '後ろへ、元の場所へ (back)' },
+            { part: 'salire (sil)', role: '語根 (Root)', meaning: '跳ぶ、跳ね返る (to jump / leap)' },
+            { part: '-ent', role: '接尾辞 (Suffix)', meaning: '〜する性質の（形容詞化）' }
+          ],
+          originLanguage: 'ラテン語 resilire（跳ね返る、元の形に戻る）',
+          coreImage: '「強い力で押し潰されても、バネのようにポンッと元の形に跳ね返る力」',
+          history: '「re-（元へ）」＋「salire（跳ぶ）」から成り、元々はゴムやバネなどの物理的な「弾力性」を意味しました。現在では単なる頑丈さではなく「ショックや逆境を受けてもしなやかに立ち直り回復する力」を指します。'
+        },
+        meanings: [{
+          partOfSpeech: '形容詞',
+          jaMeaning: '回復力のある、逆境に強い、しなやかな、弾力のある',
+          enDefinition: 'Able to withstand or recover quickly from difficult conditions, shock, injury, or change.',
+          examples: [
+            { en: 'Children are often remarkably resilient in the face of change.', ja: '子どもたちは変化に直面した際、驚くほどしなやかな適応力を見せることが多い。' },
+            { en: 'We need to build a more resilient supply chain.', ja: 'より回復力のあるサプライチェーンを構築する必要がある。' }
+          ]
+        }],
+        derivatives: {
+          forms: [
+            { partOfSpeech: '名詞', word: 'resilience', jaMeaning: '回復力、レジリエンス、弾力性' },
+            { partOfSpeech: '副詞', word: 'resiliently', jaMeaning: 'しなやかに、粘り強く' }
+          ],
+          collocations: [
+            { phrase: 'resilient to / against ~', preposition: 'to / against', meaning: '〜に対して耐性・回復力がある', example: 'crops resilient to drought' },
+            { phrase: 'resilient in the face of ~', preposition: 'in the face of', meaning: '〜に直面してもくじけない', example: 'remain resilient in the face of adversity' }
+          ]
+        },
+        relations: {
+          synonyms: [
+            { word: 'robust', jaMeaning: '強健な、堅牢な', nuance: 'resilient が「ダメージからしなやかに立ち直る」のに対し、robust は「そもそも衝撃を受けてもビクともしない頑丈さ」を強調します。' },
+            { word: 'adaptable', jaMeaning: '適応力のある', nuance: '新しい環境に合わせて自分のやり方を柔軟に変えられることに焦点を当てます。' }
+          ],
+          antonyms: [
+            { word: 'fragile', jaMeaning: '壊れやすい、脆い', nuance: 'ガラスのように少しの衝撃で割れてしまい元に戻らない性質。' },
+            { word: 'vulnerable', jaMeaning: '傷つきやすい、脆弱な', nuance: '防御が薄く、外部からの攻撃や災害のダメージを受けやすい状態。' }
+          ]
+        }
+      }
+    };
+
+    function speakText(text, lang) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang || 'en-US';
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }
+
+    function buildFallback(word) {
+      const clean = word.trim().toLowerCase();
+      return {
+        word: clean,
+        source: 'dynamic-fallback',
+        pronunciation: { ipa: `/${clean}/`, ukIpa: `/${clean}/`, syllables: clean, partOfSpeech: '名詞 / 動詞 / 形容詞', phoneticHintJa: '音声ボタンでネイティブ発音を確認できます' },
+        etymology: {
+          breakdown: [{ part: clean, role: '語幹 (Stem)', meaning: `検索語「${clean}」のコア要素` }],
+          originLanguage: '英語形態素解析モード',
+          coreImage: `「${clean}」のコアイメージと文脈上の広がり`,
+          history: `右上の「AI設定」から Gemini API キーを設定すると、「${clean}」のラテン語・ギリシャ語語源や英英辞典定義、類義語のニュアンス比較をAIがリアルタイム生成します。`
+        },
+        meanings: [{
+          partOfSpeech: '主要品詞',
+          jaMeaning: `「${clean}」の意味・概念（※AIキー設定で完全な日本語訳を自動生成）`,
+          enDefinition: `An English word ("${clean}") used to express a specific concept, action, or state in context.`,
+          examples: [{ en: `Understanding the nuance of "${clean}" improves your English communication.`, ja: `「${clean}」のニュアンスを理解することで英語での表現力が高まる。` }]
+        }],
+        derivatives: {
+          forms: [{ partOfSpeech: '関連語', word: `${clean}ly`, jaMeaning: '派生フォーム例' }],
+          collocations: [{ phrase: `${clean} in context`, preposition: 'in', meaning: '文脈に応じたコロケーション', example: `use "${clean}" in a sentence` }]
+        },
+        relations: {
+          synonyms: [{ word: 'ubiquitous', jaMeaning: '至る所に存在する（サンプル語）', nuance: 'タップすると「ubiquitous」の詳細データへ移動します。' }],
+          antonyms: [{ word: 'ephemeral', jaMeaning: 'つかの間の（サンプル語）', nuance: 'タップすると「ephemeral」の詳細データへ移動します。' }]
+        }
+      };
+    }
+
+    const API_KEY_STORAGE = 'myenglish_gemini_api_key';
+    const AI_CACHE_STORAGE = 'myenglish_ai_word_cache_v1';
+    const SAVED_WORDS_STORAGE = 'myenglish_saved_words_v1';
+    const DRAFT_MEMOS_STORAGE = 'myenglish_draft_memos_v1';
+    const WRITING_RECORDS_STORAGE = 'myenglish_writing_records_v1';
+    const REVIEW_SESSION_STORAGE = 'myenglish_review_session_v1';
+    const SYNC_CONFIG_STORAGE = 'myenglish_cloud_sync_config_v1';
+    const FAMILY_UNLOCKED_STORAGE = 'myenglish_family_unlocked_v1';
+    const GIST_DESCRIPTION_TAG = 'MyEnglish_Family_Cloud_Sync_v1';
+    let cloudSyncDebounceTimer = null;
+    let isCloudSyncing = false;
+    let currentWord = 'ubiquitous';
+    let isEvaluatingWriting = false;
+    let showModelAnswerFlag = false;
+    let currentEntryObj = MOCK_DB.ubiquitous;
+    let currentLoadingStage = 'done';
+    let currentIsCached = false;
+    let activeMainView = 'search';
+    let activeVocabTab = 'reviewing';
+    let historyList = ['ubiquitous', 'ephemeral', 'resilient'];
+    let isLoading = false;
+    let pendingDeleteWord = null;
+    let pendingNextAction = null;
+    let pendingReviewSpanTarget = null;
+    let reviewSessionState = null;
+    let spellChallengeState = null;
+
+    function loadSavedWordsMap() {
+      try {
+        const raw = localStorage.getItem(SAVED_WORDS_STORAGE);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          for (const k of Object.keys(parsed)) {
+            if (typeof parsed[k].memo !== 'string') parsed[k].memo = '';
+            if (typeof parsed[k].reviewCount !== 'number') parsed[k].reviewCount = 0;
+          }
+          return parsed;
+        }
+        return {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveWordsMap(map) {
+      try {
+        localStorage.setItem(SAVED_WORDS_STORAGE, JSON.stringify(map));
+      } catch {
+        // ignore
+      }
+      updateSavedCountBadge();
+      scheduleCloudPush();
+    }
+
+    function getSavedWordsArray() {
+      const map = loadSavedWordsMap();
+      return Object.values(map).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
+
+    function getSavedItem(word) {
+      const key = (word || '').trim().toLowerCase();
+      const map = loadSavedWordsMap();
+      return map[key] || null;
+    }
+
+    function escapeHtmlText(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function loadDraftMemosMap() {
+      try {
+        const raw = localStorage.getItem(DRAFT_MEMOS_STORAGE);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function getDraftMemo(word) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return '';
+      const saved = getSavedItem(key);
+      if (saved && typeof saved.memo === 'string') {
+        return saved.memo;
+      }
+      const drafts = loadDraftMemosMap();
+      return drafts[key] || '';
+    }
+
+    function saveDraftMemo(word, memo) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return;
+      try {
+        const drafts = loadDraftMemosMap();
+        if (memo) {
+          drafts[key] = memo;
+        } else {
+          delete drafts[key];
+        }
+        localStorage.setItem(DRAFT_MEMOS_STORAGE, JSON.stringify(drafts));
+      } catch {
+        // ignore
+      }
+
+      // すでにストック済みの単語であれば、マイ単語帳側のデータも即時連動更新する
+      const map = loadSavedWordsMap();
+      if (map[key]) {
+        map[key] = {
+          ...map[key],
+          memo: memo || '',
+          updatedAt: new Date().toISOString()
+        };
+        saveWordsMap(map);
+      } else {
+        scheduleCloudPush();
+      }
+    }
+
+    function handleDetailMemoInput(value) {
+      if (!currentEntryObj || !currentEntryObj.word) return;
+      saveDraftMemo(currentEntryObj.word, value);
+      const statusEl = document.getElementById('detail-memo-save-hint');
+      if (statusEl) {
+        const isSaved = Boolean(getSavedItem(currentEntryObj.word));
+        statusEl.textContent = isSaved
+          ? '✅ ストック済みメモを更新しました（LocalStorage保存済み）'
+          : '💾 下書き保存中（Quick / Reviewing / Completed を押すと一緒にストックされます）';
+      }
+    }
+
+    function loadWritingRecordsMap() {
+      try {
+        const raw = localStorage.getItem(WRITING_RECORDS_STORAGE);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function getWritingRecord(word) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return null;
+      const saved = getSavedItem(key);
+      if (saved && saved.writingPractice) {
+        return saved.writingPractice;
+      }
+      const map = loadWritingRecordsMap();
+      return map[key] || null;
+    }
+
+    function saveWritingRecord(word, jaPrompt, userSentence, feedback, previousLog) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return null;
+      const nowIso = new Date().toISOString();
+      const map = loadWritingRecordsMap();
+      const existing = map[key] || null;
+      const resolvedPrevLog = previousLog !== undefined ? previousLog : (existing?.previousLog || null);
+
+      const record = {
+        word: key,
+        jaPrompt: jaPrompt || existing?.jaPrompt || '',
+        userSentence: userSentence || '',
+        feedback: feedback || null,
+        previousLog: resolvedPrevLog,
+        updatedAt: nowIso
+      };
+
+      try {
+        if (!record.userSentence.trim() && !record.feedback && !record.previousLog) {
+          delete map[key];
+        } else {
+          map[key] = record;
+        }
+        localStorage.setItem(WRITING_RECORDS_STORAGE, JSON.stringify(map));
+      } catch {
+        // ignore
+      }
+
+      // すでにストック済みの単語であれば、マイ単語帳側のデータも即時連動更新する
+      const savedMap = loadSavedWordsMap();
+      if (savedMap[key]) {
+        savedMap[key] = {
+          ...savedMap[key],
+          writingPractice: record,
+          updatedAt: nowIso
+        };
+        saveWordsMap(savedMap);
+      } else {
+        scheduleCloudPush();
+      }
+
+      return record;
+    }
+
+    function resolveWritingChallenge(entry) {
+      if (entry?.writingChallenge && entry.writingChallenge.jaPrompt) {
+        return entry.writingChallenge;
+      }
+      const key = (entry?.word || '').trim().toLowerCase();
+      if (key) {
+        const savedItem = getSavedItem(key);
+        if (savedItem?.writingChallenge && savedItem.writingChallenge.jaPrompt) {
+          return savedItem.writingChallenge;
+        }
+        const cachedAi = getCachedAiEntry(key);
+        if (cachedAi?.writingChallenge && cachedAi.writingChallenge.jaPrompt) {
+          return cachedAi.writingChallenge;
+        }
+      }
+      const firstEx = entry?.meanings?.[0]?.examples?.[0];
+      const collocationHint = entry?.derivatives?.collocations?.[0]?.phrase;
+      if (firstEx && firstEx.ja && firstEx.en) {
+        return {
+          jaPrompt: firstEx.ja,
+          hint: collocationHint
+            ? `「${entry.word}」（またはコロケーション「${collocationHint}」）を使って英訳してみましょう`
+            : `「${entry.word}」（${entry.pronunciation?.partOfSpeech || '単語'}）を使って自然な1文に英訳してみましょう`,
+          modelAnswerEn: firstEx.en
+        };
+      }
+      if (key) {
+        const rec = getWritingRecord(key);
+        if (rec?.jaPrompt) {
+          return {
+            jaPrompt: rec.jaPrompt,
+            hint: `「${entry?.word || key}」を文中で自然に使って英訳してみましょう`,
+            modelAnswerEn: `In modern daily life and business, the concept of ${entry?.word || key} has become increasingly important.`
+          };
+        }
+      }
+      return {
+        jaPrompt: `現代のビジネスや日常生活において、「${entry?.word || ''}」が持つ概念はますます重要になっている。`,
+        hint: `「${entry?.word || ''}」を文中で自然に使って英訳してみましょう`,
+        modelAnswerEn: `In modern daily life and business, the concept of ${entry?.word || 'it'} has become increasingly important.`
+      };
+    }
+
+    function handleWritingInput(value) {
+      if (!currentEntryObj || !currentEntryObj.word) return;
+      const challenge = resolveWritingChallenge(currentEntryObj);
+      const existing = getWritingRecord(currentEntryObj.word);
+      saveWritingRecord(
+        currentEntryObj.word,
+        challenge.jaPrompt,
+        value,
+        existing ? existing.feedback : null
+      );
+    }
+
+    function toggleModelAnswer() {
+      showModelAnswerFlag = !showModelAnswerFlag;
+      renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+    }
+
+    let lastWritingErrorMsg = '';
+
+    function normalizeWritingFeedback(raw, userSentence, word, challenge) {
+      if (!raw || typeof raw !== 'object') {
+        return null;
+      }
+      return {
+        ratingBadge: raw.ratingBadge || '✨ AI添削フィードバック',
+        isCorrectUsage: Boolean(raw.isCorrectUsage ?? true),
+        grammarCheckJa: raw.grammarCheckJa || '文法・語法をチェックしました。',
+        correctedSentenceEn: raw.correctedSentenceEn || userSentence,
+        naturalSuggestionEn: raw.naturalSuggestionEn || challenge?.modelAnswerEn || userSentence,
+        nuanceAdviceJa: raw.nuanceAdviceJa || ''
+      };
+    }
+
+    async function submitWritingForAiFeedback() {
+      if (!currentEntryObj || !currentEntryObj.word || isEvaluatingWriting) return;
+      const inputEl = document.getElementById('writing-practice-input');
+      const existingRec = getWritingRecord(currentEntryObj.word);
+      const userSentence = ((inputEl ? inputEl.value : '') || existingRec?.userSentence || '').trim();
+      if (!userSentence) return;
+
+      const challenge = resolveWritingChallenge(currentEntryObj);
+      const word = currentEntryObj.word;
+      const apiKey = getSavedKey();
+      const prevLogSnapshot =
+        existingRec && (existingRec.userSentence?.trim() || existingRec.feedback)
+          ? {
+              userSentence: existingRec.userSentence || '',
+              feedback: existingRec.feedback || null,
+              updatedAt: existingRec.updatedAt || new Date().toISOString()
+            }
+          : existingRec?.previousLog || null;
+
+      lastWritingErrorMsg = '';
+      saveWritingRecord(word, challenge.jaPrompt, userSentence, existingRec?.feedback || null, existingRec?.previousLog || null);
+
+      isEvaluatingWriting = true;
+      const submitBtn = document.getElementById('writing-submit-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳ AIが添削中...</span>';
+      }
+
+      try {
+        let feedback = null;
+        if (apiKey) {
+          const prompt = `あなたは優しく的確なネイティブ英語講師です。
+学習者が英単語「${word}」を使った以下の和文英訳課題に取り組みました。
+
+【お題の日本文】: ${challenge.jaPrompt}
+【学習者が書いた英文】: ${userSentence}
+${challenge.modelAnswerEn ? `【参考模範解答】: ${challenge.modelAnswerEn}` : ''}
+
+学習者の英文について、文法の正誤・スペルミス・「${word}」の語法やニュアンス（結びつく前置詞やコロケーションなど）をチェックし、以下のJSONフォーマット（純粋なJSONのみ）で添削フィードバックを返してください。
+
+{
+  "ratingBadge": "総合評価の短いバッジ（例: 🌟 自然で素晴らしい表現です！ / 👍 意味はしっかり通じます！あと一歩 / 💡 語法・文法を少し直すとグッと自然になります）",
+  "isCorrectUsage": true,
+  "grammarCheckJa": "文法の正誤チェック、スペルミス、冠詞・時制、前置詞や語法の具体的な指摘・褒め言葉（日本語で分かりやすく丁寧な解説）",
+  "correctedSentenceEn": "学習者の書いた英文の構造をなるべく活かしつつ、文法・語法ミスを正しく直した英文（ミスがない場合は学習者の英文そのまま）",
+  "naturalSuggestionEn": "ネイティブスピーカーが実際のビジネスや日常で使うような、より自然で洗練された別表現（${word}を使った1文）",
+  "nuanceAdviceJa": "なぜその表現や前置詞を使うと自然になるのか、${word}のコアイメージに絡めたワンポイントアドバイス（日本語）"
+}`;
+          const rawFeedback = await callGeminiJson(prompt, apiKey);
+          feedback = normalizeWritingFeedback(rawFeedback, userSentence, word, challenge);
+        } else {
+          // APIキー未設定時のスマートローカル添削フォールバック
+          const lowerUser = userSentence.toLowerCase();
+          const baseStem = word.toLowerCase().slice(0, Math.max(3, word.length - 2));
+          const usedTargetWord = lowerUser.includes(word.toLowerCase()) || lowerUser.includes(baseStem);
+          const startsWithCapital = /^[A-Z]/.test(userSentence);
+          const endsWithPunctuation = /[.!?]$/.test(userSentence);
+          const notes = [];
+          if (usedTargetWord) {
+            notes.push(`ターゲット単語「${word}」をしっかり文中に組み込めています！`);
+          } else {
+            notes.push(`文中に「${word}」（またはその派生形）が見当たらないようです。ぜひ「${word}」を使って表現してみましょう。`);
+          }
+          if (!startsWithCapital) notes.push('文頭は大文字で始めるとより整った英文になります。');
+          if (!endsWithPunctuation) notes.push('文末にピリオド（.）を付けるのを忘れないようにしましょう。');
+          notes.push('※右上の「AI設定」から Gemini API キーを設定すると、AIがあなたの英文の細かい文法・前置詞・ニュアンスをリアルタイムで個別添削します！');
+
+          let normalizedUser = userSentence.charAt(0).toUpperCase() + userSentence.slice(1);
+          if (!/[.!?]$/.test(normalizedUser)) normalizedUser += '.';
+
+          feedback = {
+            ratingBadge: usedTargetWord
+              ? '👍 ターゲット単語を使って英作文できています！（簡易チェック）'
+              : '💡 ターゲット単語を文中に入れてみましょう（簡易チェック）',
+            isCorrectUsage: usedTargetWord,
+            grammarCheckJa: notes.join(' '),
+            correctedSentenceEn: normalizedUser,
+            naturalSuggestionEn: challenge.modelAnswerEn || `Smartphones have become ${word} in modern daily life.`,
+            nuanceAdviceJa: '模範解答の語順や前置詞の使い方も参考にしてみましょう。Gemini API キーを設定すると、あなたが書いた英文に対するピンポイントな文法・ニュアンス添削が受けられます。'
+          };
+        }
+
+        saveWritingRecord(word, challenge.jaPrompt, userSentence, feedback, prevLogSnapshot);
+      } catch (err) {
+        lastWritingErrorMsg = `AI添削エラー: ${err.message || err}`;
+        showError(lastWritingErrorMsg);
+      } finally {
+        isEvaluatingWriting = false;
+        renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+      }
+    }
+
+    function formatLocalDateYmd(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function computeNextReviewIso(days, fromDate = new Date()) {
+      const target = new Date(
+        fromDate.getFullYear(),
+        fromDate.getMonth(),
+        fromDate.getDate() + Number(days)
+      );
+      return formatLocalDateYmd(target);
+    }
+
+    function parseLocalMidnightMs(dateStr) {
+      const trimmed = String(dateStr || '').trim();
+      const ymdMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+      if (ymdMatch) {
+        return new Date(
+          Number(ymdMatch[1]),
+          Number(ymdMatch[2]) - 1,
+          Number(ymdMatch[3])
+        ).getTime();
+      }
+      const parsed = new Date(trimmed);
+      if (Number.isNaN(parsed.getTime())) {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      }
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+    }
+
+    function getReviewRemainingDays(nextReviewDate, now = new Date()) {
+      if (!nextReviewDate) return 0;
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const targetMidnight = parseLocalMidnightMs(nextReviewDate);
+      return Math.round((targetMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
+    }
+
+    function formatReviewRemaining(nextReviewDate, now = new Date()) {
+      if (!nextReviewDate) {
+        const todayYmd = formatLocalDateYmd(now);
+        return { label: '🔥 今日の復習', isDue: true, remainingDays: 0, dateYmd: todayYmd };
+      }
+      const diffDays = getReviewRemainingDays(nextReviewDate, now);
+      const dateYmd = formatLocalDateYmd(new Date(parseLocalMidnightMs(nextReviewDate)));
+      if (diffDays <= 0) {
+        return {
+          label: `🔥 今日の復習 (予定日: ${dateYmd})`,
+          isDue: true,
+          remainingDays: diffDays,
+          dateYmd
+        };
+      }
+      return {
+        label: `📅 ${diffDays}日後 (予定日: ${dateYmd})`,
+        isDue: false,
+        remainingDays: diffDays,
+        dateYmd
+      };
+    }
+
+    function groupReviewingWordsByDue(items, now = new Date()) {
+      const reviewingItems = (items || []).filter(item => item.status === 'reviewing');
+      const bucketMap = new Map();
+      for (const item of reviewingItems) {
+        const diffDays = getReviewRemainingDays(item.nextReviewDate, now);
+        const bucketKey = diffDays <= 0 ? 0 : diffDays;
+        const list = bucketMap.get(bucketKey) || [];
+        list.push(item);
+        bucketMap.set(bucketKey, list);
+      }
+      const sortedKeys = Array.from(bucketMap.keys()).sort((a, b) => a - b);
+      return sortedKeys.map(bucketDays => {
+        const groupItems = bucketMap.get(bucketDays) || [];
+        if (bucketDays === 0) {
+          return {
+            bucketDays: 0,
+            title: '🔥 今日の復習',
+            subtitle: '本日が復習予定日（または期限到来）の単語です。「📝 復習する」から全単語テスト＆作文に進みましょう！',
+            isTodayDue: true,
+            items: groupItems
+          };
+        }
+        const targetYmd = computeNextReviewIso(bucketDays, now);
+        return {
+          bucketDays,
+          title: `📅 ${bucketDays}日後`,
+          subtitle: `復習予定日: ${targetYmd}`,
+          isTodayDue: false,
+          items: groupItems
+        };
+      });
+    }
+
+    const REVIEW_SPAN_OPTIONS = [
+      { days: 0, label: '今日（すぐ復習）', desc: '今日の復習リストに入れてすぐテストする' },
+      { days: 1, label: '1日後', desc: '明日の復習スケジュールにセット' },
+      { days: 4, label: '4日後', desc: '記憶が薄れ始める4日後に復習' },
+      { days: 7, label: '7日後', desc: '1週間後に定着度をチェック' },
+      { days: 30, label: '1ヶ月後', desc: '長期記憶として定着しているか30日後に確認' }
+    ];
+
+    function openReviewSpanModal(word, source, afterSaveCallback) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return;
+      pendingReviewSpanTarget = { word: key, source: source || 'detail', afterSaveCallback: afterSaveCallback || null };
+      const descEl = document.getElementById('review-span-modal-desc');
+      if (descEl) {
+        descEl.innerHTML = `「<strong class="font-bold text-indigo-700">${escapeHtmlText(key)}</strong>」を Reviewing（復習中）に保存します。いつ復習しますか？`;
+      }
+      const optsBox = document.getElementById('review-span-options-box');
+      if (optsBox) {
+        optsBox.innerHTML = REVIEW_SPAN_OPTIONS.map(opt => {
+          const targetYmd = computeNextReviewIso(opt.days);
+          return `
+            <button type="button" onclick="confirmReviewSpanSelection(${opt.days})" class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-left transition hover:border-indigo-400 hover:bg-indigo-50/70">
+              <div>
+                <div class="text-sm font-bold text-slate-900">${opt.label}</div>
+                <div class="text-[11px] text-slate-500">${opt.desc}</div>
+              </div>
+              <span class="rounded-lg bg-indigo-100 px-2.5 py-1 font-mono text-xs font-bold text-indigo-800">
+                📅 ${targetYmd}
+              </span>
+            </button>
+          `;
+        }).join('');
+      }
+      document.getElementById('review-span-modal').classList.remove('hidden');
+    }
+
+    function closeReviewSpanModal() {
+      pendingReviewSpanTarget = null;
+      document.getElementById('review-span-modal').classList.add('hidden');
+    }
+
+    function confirmReviewSpanSelection(days) {
+      if (!pendingReviewSpanTarget) return;
+      const target = pendingReviewSpanTarget;
+      closeReviewSpanModal();
+
+      if (target.source === 'detail' && currentEntryObj && currentEntryObj.word.toLowerCase() === target.word.toLowerCase()) {
+        selectWordStatus('reviewing', Number(days));
+      } else {
+        changeStatusFromList(target.word, 'reviewing', Number(days));
+      }
+      if (typeof target.afterSaveCallback === 'function') {
+        target.afterSaveCallback();
+      }
+    }
+
+    function selectWordStatus(status, reviewIntervalDays) {
+      if (!currentEntryObj) return;
+      if (status === 'reviewing' && reviewIntervalDays === undefined) {
+        openReviewSpanModal(currentEntryObj.word, 'detail');
+        return;
+      }
+      const key = currentEntryObj.word.trim().toLowerCase();
+      const map = loadSavedWordsMap();
+      const existing = map[key];
+      const nowIso = new Date().toISOString();
+      const interval = status === 'reviewing'
+        ? (reviewIntervalDays !== undefined ? Number(reviewIntervalDays) : (existing?.reviewIntervalDays ?? 4))
+        : undefined;
+      const memoInputEl = document.getElementById('detail-memo-input');
+      const memoText = memoInputEl ? memoInputEl.value : getDraftMemo(key);
+      const writingRec = getWritingRecord(key) || existing?.writingPractice || undefined;
+
+      map[key] = {
+        word: key,
+        status,
+        partOfSpeech: currentEntryObj.pronunciation?.partOfSpeech || existing?.partOfSpeech || '単語',
+        jaMeaning: currentEntryObj.meanings?.[0]?.jaMeaning || existing?.jaMeaning || '（意味未取得）',
+        ipa: currentEntryObj.pronunciation?.ipa || existing?.ipa || `/${key}/`,
+        coreImage: currentEntryObj.etymology?.coreImage || existing?.coreImage || '',
+        memo: memoText !== undefined ? memoText : (existing?.memo || ''),
+        writingPractice: writingRec,
+        writingChallenge: resolveWritingChallenge(currentEntryObj),
+        savedAt: existing?.savedAt || nowIso,
+        updatedAt: nowIso,
+        reviewIntervalDays: interval,
+        nextReviewDate: status === 'reviewing' && interval !== undefined ? computeNextReviewIso(interval) : undefined,
+        reviewCount: typeof existing?.reviewCount === 'number' ? existing.reviewCount : 0,
+        lastReviewedDate: existing?.lastReviewedDate || undefined,
+        isMastered: status === 'completed' ? Boolean(existing?.isMastered) : false,
+        masteredDate: status === 'completed' ? (existing?.masteredDate || undefined) : undefined
+      };
+
+      saveWordsMap(map);
+      saveDraftMemo(key, map[key].memo);
+      renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+    }
+
+    function requestRemoveWordFromSaved(word) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return;
+      pendingDeleteWord = key;
+      const desc = document.getElementById('delete-confirm-desc');
+      if (desc) {
+        desc.innerHTML = `マイ単語帳にストックされている「<strong class="font-bold text-slate-900">${key}</strong>」を削除します。よろしいですか？`;
+      }
+      document.getElementById('delete-confirm-modal').classList.remove('hidden');
+    }
+
+    function executeRemoveWordFromSaved() {
+      if (!pendingDeleteWord) return;
+      const key = pendingDeleteWord;
+      pendingDeleteWord = null;
+      document.getElementById('delete-confirm-modal').classList.add('hidden');
+
+      const map = loadSavedWordsMap();
+      if (map[key]) {
+        delete map[key];
+        saveWordsMap(map);
+      }
+      if (activeMainView === 'search') {
+        renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+      } else {
+        renderVocabularyView();
+      }
+    }
+
+    function closeDeleteConfirmModal() {
+      pendingDeleteWord = null;
+      document.getElementById('delete-confirm-modal').classList.add('hidden');
+    }
+
+    function isCurrentWordUnsaved() {
+      if (!currentEntryObj || !currentEntryObj.word) return false;
+      return !getSavedItem(currentEntryObj.word);
+    }
+
+    function openUnsavedConfirmModal(actionCallback) {
+      pendingNextAction = actionCallback;
+      const w = currentEntryObj?.word || currentWord;
+      const desc = document.getElementById('unsaved-confirm-desc');
+      if (desc) {
+        desc.innerHTML = `現在表示中の単語「<strong class="font-bold text-indigo-700">${w}</strong>」はまだマイ単語帳にストックされていません。<br/>別の画面へ移動する前に保存しておきますか？`;
+      }
+      document.getElementById('unsaved-confirm-modal').classList.remove('hidden');
+    }
+
+    function closeUnsavedConfirmModal() {
+      pendingNextAction = null;
+      document.getElementById('unsaved-confirm-modal').classList.add('hidden');
+    }
+
+    function confirmSaveAndProceed(status) {
+      const nextFn = pendingNextAction;
+      closeUnsavedConfirmModal();
+      if (status === 'reviewing') {
+        openReviewSpanModal(currentEntryObj?.word || currentWord, 'detail', nextFn);
+        return;
+      }
+      selectWordStatus(status);
+      if (typeof nextFn === 'function') {
+        nextFn();
+      }
+    }
+
+    function proceedWithoutSaving() {
+      const nextFn = pendingNextAction;
+      closeUnsavedConfirmModal();
+      if (typeof nextFn === 'function') {
+        nextFn();
+      }
+    }
+
+    function changeStatusFromList(word, newStatus, reviewDays, incrementReview = false) {
+      const key = (word || '').trim().toLowerCase();
+      if (newStatus === 'reviewing' && reviewDays === undefined) {
+        openReviewSpanModal(key, 'list');
+        return;
+      }
+      const map = loadSavedWordsMap();
+      const existing = map[key];
+      if (!existing) return;
+      const nowIso = new Date().toISOString();
+      const todayYmd = formatLocalDateYmd(new Date());
+      const interval = newStatus === 'reviewing'
+        ? (reviewDays !== undefined ? Number(reviewDays) : (existing.reviewIntervalDays ?? 4))
+        : undefined;
+      const baseReviewCount = typeof existing.reviewCount === 'number' ? existing.reviewCount : 0;
+
+      map[key] = {
+        ...existing,
+        status: newStatus,
+        updatedAt: nowIso,
+        reviewIntervalDays: interval,
+        nextReviewDate: newStatus === 'reviewing' && interval !== undefined ? computeNextReviewIso(interval) : undefined,
+        reviewCount: incrementReview ? baseReviewCount + 1 : baseReviewCount,
+        lastReviewedDate: incrementReview ? todayYmd : existing.lastReviewedDate,
+        isMastered: newStatus === 'completed' ? Boolean(existing.isMastered) : false,
+        masteredDate: newStatus === 'completed' ? (existing.masteredDate || undefined) : undefined
+      };
+      saveWordsMap(map);
+      if (activeMainView === 'vocabulary') {
+        renderVocabularyView();
+      }
+    }
+
+    function promoteWordToMaster(word) {
+      const key = (word || '').trim().toLowerCase();
+      if (!key) return;
+      const map = loadSavedWordsMap();
+      const existing = map[key];
+      if (!existing) return;
+      const todayYmd = formatLocalDateYmd(new Date());
+      map[key] = {
+        ...existing,
+        status: 'completed',
+        isMastered: true,
+        masteredDate: todayYmd,
+        updatedAt: new Date().toISOString()
+      };
+      saveWordsMap(map);
+    }
+
+    function updateSavedCountBadge() {
+      const count = getSavedWordsArray().length;
+      const badge = document.getElementById('saved-count-badge');
+      if (badge) badge.textContent = String(count);
+    }
+
+    function switchMainView(view, skipUnsavedCheck = false) {
+      if (
+        !skipUnsavedCheck &&
+        activeMainView === 'search' &&
+        view === 'vocabulary' &&
+        isCurrentWordUnsaved()
+      ) {
+        openUnsavedConfirmModal(() => switchMainView(view, true));
+        return;
+      }
+      activeMainView = view;
+      const searchWrapper = document.getElementById('search-view-wrapper');
+      const vocabWrapper = document.getElementById('vocabulary-view-wrapper');
+      const sessionWrapper = document.getElementById('review-session-view-wrapper');
+      const spellWrapper = document.getElementById('spell-challenge-view-wrapper');
+      const navSearchBtn = document.getElementById('nav-search-btn');
+      const navVocabBtn = document.getElementById('nav-vocab-btn');
+
+      if (view === 'search') {
+        searchWrapper.classList.remove('hidden');
+        vocabWrapper.classList.add('hidden');
+        if (sessionWrapper) sessionWrapper.classList.add('hidden');
+        if (spellWrapper) spellWrapper.classList.add('hidden');
+        navSearchBtn.className = 'inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition';
+        navVocabBtn.className = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+        renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+      } else if (view === 'review-session') {
+        searchWrapper.classList.add('hidden');
+        vocabWrapper.classList.add('hidden');
+        if (sessionWrapper) sessionWrapper.classList.remove('hidden');
+        if (spellWrapper) spellWrapper.classList.add('hidden');
+        navVocabBtn.className = 'inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition';
+        navSearchBtn.className = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+        renderReviewSessionView();
+      } else if (view === 'spell-challenge') {
+        searchWrapper.classList.add('hidden');
+        vocabWrapper.classList.add('hidden');
+        if (sessionWrapper) sessionWrapper.classList.add('hidden');
+        if (spellWrapper) spellWrapper.classList.remove('hidden');
+        navVocabBtn.className = 'inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition';
+        navSearchBtn.className = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+        renderSpellChallengeView();
+      } else {
+        searchWrapper.classList.add('hidden');
+        vocabWrapper.classList.remove('hidden');
+        if (sessionWrapper) sessionWrapper.classList.add('hidden');
+        if (spellWrapper) spellWrapper.classList.add('hidden');
+        navVocabBtn.className = 'inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-2xs transition';
+        navSearchBtn.className = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 transition';
+        renderVocabularyView();
+      }
+    }
+
+    function switchVocabTab(tab) {
+      activeVocabTab = tab;
+      renderVocabularyView();
+    }
+
+    function jumpToWordFromList(word) {
+      switchMainView('search', true);
+      triggerSearch(word, false, true);
+    }
+
+    function getSavedKey() {
+      try {
+        return (localStorage.getItem(API_KEY_STORAGE) || '').trim();
+      } catch {
+        return '';
+      }
+    }
+
+    function setSavedKey(key) {
+      try {
+        if (!key.trim()) {
+          localStorage.removeItem(API_KEY_STORAGE);
+        } else {
+          localStorage.setItem(API_KEY_STORAGE, key.trim());
+        }
+      } catch {
+        // ignore
+      }
+      updateApiStatusBadge();
+    }
+
+    function getCachedAiEntry(word) {
+      try {
+        const raw = localStorage.getItem(AI_CACHE_STORAGE);
+        if (!raw) return null;
+        const map = JSON.parse(raw);
+        return map[word.toLowerCase()] || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveCachedAiEntry(entry) {
+      try {
+        const raw = localStorage.getItem(AI_CACHE_STORAGE);
+        const map = raw ? JSON.parse(raw) : {};
+        map[entry.word.toLowerCase()] = entry;
+        localStorage.setItem(AI_CACHE_STORAGE, JSON.stringify(map));
+      } catch {
+        // ignore
+      }
+    }
+
+    function updateApiStatusBadge() {
+      const key = getSavedKey();
+      const btn = document.getElementById('open-api-modal-btn');
+      const dot = document.getElementById('api-status-dot');
+      const label = document.getElementById('api-status-label');
+      if (key) {
+        btn.className = 'inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 transition';
+        dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+        label.textContent = '✨ Gemini AI 連携中';
+      } else {
+        btn.className = 'inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200/70 transition';
+        dot.className = 'h-2 w-2 rounded-full bg-indigo-500';
+        label.textContent = 'AI設定 (現在はモック辞書)';
+      }
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      const txt = document.getElementById('error-text');
+      if (!msg) {
+        box.classList.add('hidden');
+        txt.textContent = '';
+      } else {
+        box.classList.remove('hidden');
+        txt.textContent = msg;
+      }
+    }
+
+    function setLoadingState(loading, word, stageMessage) {
+      isLoading = loading;
+      const submitBtn = document.getElementById('submit-btn');
+      const aiLoadingBanner = document.getElementById('ai-loading-banner');
+      if (loading) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-60', 'cursor-wait');
+        submitBtn.innerHTML = '<span>⏳ AI解析中...</span>';
+        if (aiLoadingBanner) {
+          aiLoadingBanner.classList.remove('hidden');
+          aiLoadingBanner.innerHTML = `
+            <div class="flex items-center justify-center gap-2.5 rounded-xl border border-indigo-200 bg-indigo-50/90 px-4 py-2.5 text-xs font-semibold text-indigo-900 shadow-xs">
+              <div class="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-700"></div>
+              <span>${stageMessage || `Gemini AI が「${word}」を2段階並列で高速生成中です...`}</span>
+            </div>
+          `;
+        }
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-60', 'cursor-wait');
+        submitBtn.innerHTML = '<span>深掘り！！</span>';
+        if (aiLoadingBanner) {
+          aiLoadingBanner.classList.add('hidden');
+          aiLoadingBanner.innerHTML = '';
+        }
+      }
+    }
+
+    function parseGeminiJsonSafe(rawText) {
+      const cleaned = String(rawText || '')
+        .replace(/^```json\s*/i, '')
+        .replace(/```\s*$/, '')
+        .trim();
+      try {
+        return JSON.parse(cleaned);
+      } catch (err) {
+        const firstBrace = cleaned.indexOf('{');
+        const lastBrace = cleaned.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
+          return JSON.parse(cleaned.slice(firstBrace, lastBrace + 1));
+        }
+        throw err;
+      }
+    }
+
+    const modelQuotaCooldownUntil = {};
+
+    async function callGeminiJson(prompt, apiKey) {
+      const baseModels = [
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash-lite',
+        'gemini-flash-latest',
+        'gemini-3.5-flash'
+      ];
+      const now = Date.now();
+      const activeModels = baseModels.filter(m => !(modelQuotaCooldownUntil[m] && modelQuotaCooldownUntil[m] > now));
+      const modelsToTry = activeModels.length > 0 ? activeModels : baseModels;
+      let lastError = null;
+
+      for (const modelName of modelsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.3
+              }
+            })
+          });
+
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            const detail = errJson?.error?.message || `HTTP ${res.status}`;
+            if (res.status === 429 || /quota|rate limit/i.test(detail)) {
+              // 1日の無料枠上限に達したモデルは30分間スキップ記憶し、次回から別枠モデルへ即座に直結させる
+              modelQuotaCooldownUntil[modelName] = Date.now() + 30 * 60 * 1000;
+            }
+            throw new Error(`Gemini API エラー (${modelName}): ${detail}`);
+          }
+
+          const data = await res.json();
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          const answerPart = parts.find(p => !p.thought && typeof p.text === 'string') || parts[0];
+          const rawText = answerPart?.text;
+          if (!rawText) {
+            throw new Error('Gemini API から空のレスポンスが返されました。');
+          }
+
+          return parseGeminiJsonSafe(rawText);
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw lastError || new Error('Gemini API 呼び出しに失敗しました。');
+    }
+
+    // 第1便: 発音 ＋ 日本語の意味・英英辞典定義・例文（素早く生成して即座にメインカードへ反映）
+    async function fetchFastCoreFromGemini(word, apiKey) {
+      const prompt = `あなたは英語教育と辞書のエキスパートです。
+英単語または熟語「${word}」の【発音】と【意味・英英定義・実践例文】を、以下のJSONフォーマット（純粋なJSONのみ）で作成してください。
+
+{
+  "word": "${word}",
+  "pronunciation": {
+    "ipa": "アメリカ英語のIPA発音記号 (例: /rɪˈzɪl.jənt/)",
+    "ukIpa": "イギリス英語のIPA発音記号",
+    "syllables": "中黒(·)で区切った音節表記 (例: re·sil·ient)",
+    "partOfSpeech": "主な品詞 (例: 形容詞 (Adjective))",
+    "phoneticHintJa": "カタカナ発音と強勢位置のワンポイントガイド"
+  },
+  "meanings": [
+    {
+      "partOfSpeech": "品詞",
+      "jaMeaning": "分かりやすい日本語での意味",
+      "enDefinition": "英英辞典（Oxford/Cambridge等）スタイルの明確な英語定義",
+      "examples": [
+        { "en": "自然で実用的な英語例文1", "ja": "自然な日本語訳1" },
+        { "en": "自然で実用的な英語例文2", "ja": "自然な日本語訳2" }
+      ]
+    }
+  ]
+}`;
+      return callGeminiJson(prompt, apiKey);
+    }
+
+    // 第2便: 語源・歴史ストーリー ＋ 派生語・前置詞 ＋ 類義語・対義語のニュアンス比較 ＋ 実践英作文お題（じっくり深く思考して生成）
+    async function fetchDeepAnalysisFromGemini(word, apiKey) {
+      const prompt = `あなたは言語学者・語源研究者・英語教育のエキスパートです。
+英単語または熟語「${word}」について、日本人学習者が本質から深く理解できるよう、【語源・歴史的背景】【派生語・前置詞】【類義語・対義語のニュアンス使い分け】【実践・和文英訳お題】を以下のJSONフォーマット（純粋なJSONのみ）で詳しく作成してください。
+
+{
+  "etymology": {
+    "breakdown": [
+      { "part": "接頭辞・語根・接尾辞", "role": "接頭辞 (Prefix) / 語根 (Root) / 接尾辞 (Suffix) のいずれか", "meaning": "そのパーツの意味 (例: 後ろへ (back))" }
+    ],
+    "originLanguage": "由来言語と原語 (例: ラテン語 resilire)",
+    "coreImage": "一文で掴めるコアイメージ",
+    "history": "接頭辞・語根の成り立ちから現代のニュアンスに至る歴史的ストーリー（140〜240文字程度で詳しく）"
+  },
+  "derivatives": {
+    "forms": [
+      { "partOfSpeech": "品詞 (名詞/動詞/形容詞/副詞など)", "word": "派生語", "jaMeaning": "日本語の意味" }
+    ],
+    "collocations": [
+      { "phrase": "よく一緒に使われる前置詞やコロケーション (例: resilient to ~)", "preposition": "核となる前置詞 (あれば)", "meaning": "意味", "example": "短い使用例" }
+    ]
+  },
+  "relations": {
+    "synonyms": [
+      { "word": "類義語", "jaMeaning": "日本語訳", "nuance": "検索語(${word})とどうニュアンスや使われる場面が違うのかの具体的な使い分け解説" }
+    ],
+    "antonyms": [
+      { "word": "対義語", "jaMeaning": "日本語訳", "nuance": "どのような点で対比されるかのニュアンス解説" }
+    ]
+  },
+  "writingChallenge": {
+    "jaPrompt": "検索語（${word}）を実践的に使って英訳したくなる、少し頭を使う自然な日本語の短文お題（1文）",
+    "hint": "使うべき前置詞や構文・コロケーションのワンポイントヒント",
+    "modelAnswerEn": "その日本語お題に対する自然で洗練された英語の模範解答例（${word}を含む1文）"
+  }
+}`;
+      return callGeminiJson(prompt, apiKey);
+    }
+
+    function renderSkeletonBox(message) {
+      return `
+        <div class="mt-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-indigo-200 bg-indigo-50/40 px-4 py-10 text-center">
+          <div class="mb-3 h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+          <p class="text-sm font-bold text-indigo-900">${message}</p>
+          <div class="mt-3 w-full max-w-xs space-y-2">
+            <div class="h-2.5 w-full animate-pulse rounded bg-indigo-100"></div>
+            <div class="h-2.5 w-4/5 mx-auto animate-pulse rounded bg-indigo-100"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStatusBarForCard(entry) {
+      const saved = getSavedItem(entry.word);
+      const currentStatus = saved ? saved.status : null;
+      const currentInterval = saved?.reviewIntervalDays || 3;
+      const reviewInfo = currentStatus === 'reviewing' ? formatReviewRemaining(saved?.nextReviewDate) : null;
+      const safeWord = entry.word.replace(/'/g, "\\'");
+
+      return `
+        <div class="mt-4 rounded-xl border border-slate-200/90 bg-white/95 p-3.5 shadow-2xs">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-bold text-slate-600">📌 マイ単語帳へストック（ステータス選択）:</span>
+            ${saved ? `
+              <button type="button" onclick="requestRemoveWordFromSaved('${safeWord}')" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 hover:bg-rose-50 hover:text-rose-600">
+                🗑️ ストック解除
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <!-- Quick -->
+            <button type="button" onclick="selectWordStatus('quick')" class="flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+              currentStatus === 'quick'
+                ? 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-500/20'
+                : 'border-slate-200 bg-slate-50/70 text-slate-700 hover:border-amber-300 hover:bg-amber-50/40'
+            }">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                currentStatus === 'quick' ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-700'
+              }">⚡</div>
+              <div>
+                <div class="text-xs font-bold">Quick（一時保管）</div>
+                <div class="text-[11px] opacity-75">後で語源・詳細をじっくり見る</div>
+              </div>
+            </button>
+
+            <!-- Reviewing -->
+            <button type="button" onclick="selectWordStatus('reviewing')" class="flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+              currentStatus === 'reviewing'
+                ? 'border-indigo-600 bg-indigo-50 text-indigo-950 ring-2 ring-indigo-500/20'
+                : 'border-slate-200 bg-slate-50/70 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40'
+            }">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                currentStatus === 'reviewing' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700'
+              }">🔄</div>
+              <div>
+                <div class="text-xs font-bold">Reviewing（復習中）</div>
+                <div class="text-[11px] opacity-75">復習スパンを選んでスケジュール管理</div>
+              </div>
+            </button>
+
+            <!-- Completed -->
+            <button type="button" onclick="selectWordStatus('completed')" class="flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+              currentStatus === 'completed'
+                ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-500/20'
+                : 'border-slate-200 bg-slate-50/70 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40'
+            }">
+              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                currentStatus === 'completed' ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-700'
+              }">🏆</div>
+              <div>
+                <div class="text-xs font-bold">Completed（卒業）</div>
+                <div class="text-[11px] opacity-75">完全に覚えてマスターした単語</div>
+              </div>
+            </button>
+          </div>
+
+          ${currentStatus === 'reviewing' && reviewInfo ? `
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs">
+              <div class="font-semibold text-indigo-900">${reviewInfo.label}</div>
+              <button type="button" onclick="selectWordStatus('reviewing')" class="rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100">
+                📅 復習スパンを変更
+              </button>
+            </div>
+          ` : ''}
+
+          ${saved ? `
+            <div class="mt-2.5 flex flex-wrap items-center gap-3 rounded-lg border border-slate-200/80 bg-slate-50/80 px-3 py-2 text-xs text-slate-600">
+              <span class="inline-flex items-center gap-1.5 font-semibold text-slate-700">
+                🔁 累計復習回数: <strong class="font-bold text-indigo-700">${saved.reviewCount ?? 0}回</strong>
+              </span>
+              <span class="text-slate-300">|</span>
+              <span class="inline-flex items-center gap-1.5">
+                🕒 直近の復習日: <strong class="font-semibold text-slate-800">${saved.lastReviewedDate || '未実施'}</strong>
+              </span>
+              ${saved.status === 'completed' && saved.isMastered ? `
+                <span class="text-slate-300">|</span>
+                <span class="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 font-bold text-amber-800">
+                  👑 Master（完全卒業${saved.masteredDate ? `: ${saved.masteredDate}` : ''}）
+                </span>
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderSingleVocabCardHtml(item) {
+      const safeW = item.word.replace(/'/g, "\\'");
+      const rev = item.status === 'reviewing' ? formatReviewRemaining(item.nextReviewDate) : null;
+      const reviewCount = item.reviewCount ?? 0;
+      const lastReviewedDate = item.lastReviewedDate || '';
+      return `
+        <div class="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-indigo-200">
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="jumpToWordFromList('${safeW}')" class="font-serif-en text-2xl font-bold text-slate-900 hover:text-indigo-600 hover:underline">
+                  ${item.word} ↗
+                </button>
+                <span class="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600">${item.ipa || `/${item.word}/`}</span>
+                <button type="button" onclick="speakText('${safeW}', 'en-US')" class="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-indigo-50 hover:text-indigo-600" title="発音を聴く">🔊</button>
+              </div>
+              <button type="button" onclick="requestRemoveWordFromSaved('${safeW}')" class="rounded-lg p-1.5 text-xs text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="削除">🗑️</button>
+            </div>
+
+            <div class="mt-2 flex items-baseline gap-2">
+              <span class="rounded bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700">${item.partOfSpeech}</span>
+              <p class="text-sm font-bold text-slate-800">${item.jaMeaning}</p>
+            </div>
+
+            ${item.coreImage ? `
+              <p class="mt-2 rounded-lg bg-amber-50/70 px-3 py-1.5 text-xs font-medium text-amber-900">🧭 ${item.coreImage}</p>
+            ` : ''}
+
+            <div class="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+              <span class="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-700">
+                🔁 復習 ${reviewCount}回
+              </span>
+              <span class="inline-flex items-center gap-1 rounded-md bg-slate-50 px-2 py-0.5 text-slate-500">
+                🕒 最終復習: ${lastReviewedDate || '未実施'}
+              </span>
+              ${item.status === 'completed' && item.isMastered ? `
+                <span class="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 font-bold text-amber-800">
+                  👑 Master${item.masteredDate ? ` (${item.masteredDate})` : ''}
+                </span>
+              ` : ''}
+            </div>
+
+            ${item.status === 'reviewing' && rev ? `
+              <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs">
+                <span class="font-bold ${rev.isDue ? 'text-rose-600' : 'text-indigo-800'}">${rev.label}</span>
+                <button type="button" onclick="changeStatusFromList('${safeW}', 'reviewing')" class="rounded-lg border border-indigo-200 bg-white px-2.5 py-1 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100">
+                  スパン変更
+                </button>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- ステータス変更ボタン（一覧カード内にはメモ欄・作文欄は一切配置しない） -->
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+            <span class="text-[11px] font-semibold text-slate-400">ステータス変更:</span>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="changeStatusFromList('${safeW}', 'quick')" class="rounded-lg border px-2.5 py-1 text-xs font-bold transition ${
+                item.status === 'quick' ? 'border-amber-500 bg-amber-500 text-white' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-amber-300 hover:bg-amber-50'
+              }">⚡ Quick</button>
+              <button type="button" onclick="changeStatusFromList('${safeW}', 'reviewing')" class="rounded-lg border px-2.5 py-1 text-xs font-bold transition ${
+                item.status === 'reviewing' ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50'
+              }">🔄 Reviewing</button>
+              <button type="button" onclick="changeStatusFromList('${safeW}', 'completed')" class="rounded-lg border px-2.5 py-1 text-xs font-bold transition ${
+                item.status === 'completed' ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50'
+              }">🏆 Completed</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderVocabularyView() {
+      const allItems = getSavedWordsArray();
+      const counts = {
+        quick: allItems.filter(i => i.status === 'quick').length,
+        reviewing: allItems.filter(i => i.status === 'reviewing').length,
+        completed: allItems.filter(i => i.status === 'completed').length,
+        all: allItems.length
+      };
+
+      const filtered = activeVocabTab === 'all' ? allItems : allItems.filter(i => i.status === activeVocabTab);
+      const reviewGroups = groupReviewingWordsByDue(allItems);
+      const todayDueGroup = reviewGroups.find(g => g.isTodayDue);
+      const todayDueItems = todayDueGroup ? todayDueGroup.items : [];
+      const futureGroups = reviewGroups.filter(g => !g.isTodayDue);
+      const completedAllItems = allItems.filter(i => i.status === 'completed');
+      const unmasteredCompletedItems = completedAllItems.filter(i => !i.isMastered);
+      const masteredCompletedItems = completedAllItems.filter(i => Boolean(i.isMastered));
+
+      const tabInfos = {
+        quick: {
+          title: '⚡ Quick（一時保管ボックス）',
+          desc: '時間がない時に発音と意味だけパッと調べた単語です。時間がある時に単語名をタップして、語源・由来や類義語のニュアンスをじっくり深掘りしましょう！',
+          style: 'border-amber-200 bg-amber-50/70 text-amber-900'
+        },
+        reviewing: {
+          title: '🔄 Reviewing（日付別・復習スケジュール管理）',
+          desc: '最適なタイミングで記憶に刻み込んでいく単語です。日付に合わせて自動で整理されるので、『今日の復習』が届いたらテストや作文でアウトプットしていきましょう！',
+          style: 'border-indigo-200 bg-indigo-50/70 text-indigo-900'
+        },
+        completed: {
+          title: '🏆 Completed（コンプリート・卒業ボックス）',
+          desc: '完全に自分のものにして卒業した単語コレクションです。いつでも見返したり、もう一度復習中に戻したりできます。',
+          style: 'border-emerald-200 bg-emerald-50/70 text-emerald-900'
+        },
+        all: {
+          title: '📚 すべての保存済み単語',
+          desc: 'Quick・Reviewing・Completed にストックされているすべての英単語を一覧で確認・ステータス変更できます。',
+          style: 'border-slate-200 bg-slate-100 text-slate-800'
+        }
+      };
+
+      const info = tabInfos[activeVocabTab] || tabInfos.reviewing;
+      const box = document.getElementById('vocabulary-container');
+
+      box.innerHTML = `
+        <!-- ステータスタブ切り替え -->
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <button type="button" onclick="switchVocabTab('quick')" class="flex items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+            activeVocabTab === 'quick' ? 'border-amber-500 bg-amber-500 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-amber-50'
+          }">
+            <span class="text-sm">⚡ Quick</span>
+            <span class="rounded-full px-2 py-0.5 text-xs ${activeVocabTab === 'quick' ? 'bg-amber-700/40 text-white' : 'bg-amber-100 text-amber-800'}">${counts.quick}</span>
+          </button>
+
+          <button type="button" onclick="switchVocabTab('reviewing')" class="flex items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+            activeVocabTab === 'reviewing' ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-indigo-50'
+          }">
+            <span class="text-sm">🔄 Reviewing</span>
+            <span class="rounded-full px-2 py-0.5 text-xs ${activeVocabTab === 'reviewing' ? 'bg-indigo-800/40 text-white' : 'bg-indigo-100 text-indigo-800'}">${counts.reviewing}</span>
+          </button>
+
+          <button type="button" onclick="switchVocabTab('completed')" class="flex items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+            activeVocabTab === 'completed' ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-emerald-50'
+          }">
+            <span class="text-sm">🏆 Completed</span>
+            <span class="rounded-full px-2 py-0.5 text-xs ${activeVocabTab === 'completed' ? 'bg-emerald-800/40 text-white' : 'bg-emerald-100 text-emerald-800'}">${counts.completed}</span>
+          </button>
+
+          <button type="button" onclick="switchVocabTab('all')" class="flex items-center justify-between rounded-xl border px-4 py-3 text-left font-bold transition ${
+            activeVocabTab === 'all' ? 'border-slate-800 bg-slate-800 text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
+          }">
+            <span class="text-sm">📚 すべて</span>
+            <span class="rounded-full px-2 py-0.5 text-xs ${activeVocabTab === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700'}">${counts.all}</span>
+          </button>
+        </div>
+
+        <!-- ボックスの説明 -->
+        <div class="rounded-2xl border p-4 ${info.style}">
+          <h2 class="text-sm font-bold">${info.title}</h2>
+          <p class="mt-1 text-xs leading-relaxed opacity-90">${info.desc}</p>
+        </div>
+
+        <!-- 単語カードリスト（Reviewingタブでは期限が近い順のグループ枠で分類表示） -->
+        ${activeVocabTab === 'reviewing' ? (
+          counts.reviewing === 0 ? `
+            <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-14 text-center">
+              <div class="text-3xl">📭</div>
+              <p class="mt-3 text-sm font-bold text-slate-700">Reviewing（復習中）にはまだ単語が保存されていません</p>
+              <p class="mt-1 text-xs text-slate-500">「🔍 単語検索」画面や他のタブで「🔄 Reviewing」ボタンを押すと、復習スパンを選んでスケジュール登録できます！</p>
+              <button type="button" onclick="switchMainView('search')" class="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700">🔍 単語検索へ戻る</button>
+            </div>
+          ` : `
+            <div class="space-y-6">
+              <!-- 1. 「今日の復習」グループ枠（ヘッダー右上に「📝 復習する」ボタンを配置） -->
+              <section class="rounded-2xl border-2 border-rose-200 bg-rose-50/40 p-5 shadow-xs">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-rose-200/80 pb-3.5">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-base font-bold text-rose-950">🔥 今日の復習</h3>
+                      <span class="rounded-full bg-rose-600 px-2.5 py-0.5 text-xs font-bold text-white">${todayDueItems.length} 語</span>
+                    </div>
+                    <p class="mt-1 text-xs text-rose-800">
+                      ${todayDueItems.length > 0
+                        ? '本日が復習予定日（または期限到来）の単語です。右上の「📝 復習する」から全単語テスト＆作文に進みましょう！'
+                        : '今日復習すべき単語はすべて完了しています！（「今日（すぐ復習）」を選ぶとここに追加されます）'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    ${todayDueItems.length === 0 ? 'disabled' : ''}
+                    onclick="startTodayReviewSession()"
+                    class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-300 sm:text-sm"
+                  >
+                    <span>📝 復習する</span>
+                  </button>
+                </div>
+
+                ${todayDueItems.length === 0 ? `
+                  <div class="mt-4 rounded-xl border border-dashed border-rose-200 bg-white/80 py-6 text-center text-xs font-medium text-slate-500">
+                    現在「今日の復習」に入っている単語はありません。下のグループや単語詳細から「今日（すぐ復習）」を選ぶとすぐテストできます。
+                  </div>
+                ` : `
+                  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    ${todayDueItems.map(item => renderSingleVocabCardHtml(item)).join('')}
+                  </div>
+                `}
+              </section>
+
+              <!-- 2. 以降のグループ枠（残り日数が少ない順：「1日後」「2日後」「4日後」「7日後」…） -->
+              ${futureGroups.map(group => `
+                <section class="rounded-2xl border border-indigo-200/90 bg-indigo-50/30 p-5 shadow-xs">
+                  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <h3 class="text-base font-bold text-indigo-950">${group.title}</h3>
+                        <span class="rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">${group.items.length} 語</span>
+                      </div>
+                      <p class="mt-0.5 text-xs text-indigo-700">${group.subtitle}</p>
+                    </div>
+                  </div>
+                  <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    ${group.items.map(item => renderSingleVocabCardHtml(item)).join('')}
+                  </div>
+                </section>
+              `).join('')}
+            </div>
+          `
+        ) : activeVocabTab === 'completed' ? `
+          <div class="space-y-6">
+            <!-- 1. 一番上の枠：スペル挑戦 ＆ Completed（Reviewingの「今日の復習」と同じモデル） -->
+            <section class="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-5 shadow-xs">
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-200/80 pb-3.5">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-emerald-950">🎯 スペル挑戦待ち（Completed）</h3>
+                    <span class="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-bold text-white">${unmasteredCompletedItems.length} 語</span>
+                  </div>
+                  <p class="mt-1 text-xs text-emerald-800">
+                    ${unmasteredCompletedItems.length > 0
+                      ? '卒業（Completed）に入った単語です。右上の「✨ スペル挑戦！（ランダム5問）」でスペルを正解すると、下の「👑 Master（完全卒業）」へ昇格します！'
+                      : completedAllItems.length > 0
+                      ? 'すべてのCompleted単語が「👑 Master（完全卒業）」に昇格しています！おめでとうございます！'
+                      : 'まだCompletedに単語がありません。復習をクリアして卒業した単語がここに入るとスペル挑戦が解放されます！'}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  ${unmasteredCompletedItems.length === 0 ? 'disabled' : ''}
+                  onclick="startSpellChallengeSession()"
+                  class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300 sm:text-sm"
+                >
+                  <span>✨ スペル挑戦！（ランダム5問）</span>
+                </button>
+              </div>
+
+              ${unmasteredCompletedItems.length === 0 ? `
+                <div class="mt-4 rounded-xl border border-dashed border-emerald-200 bg-white/80 py-6 text-center text-xs font-medium text-slate-500">
+                  ${completedAllItems.length > 0
+                    ? '現在スペル挑戦待ちの単語はありません（すべて下の「👑 Master」に昇格済みです✨）'
+                    : '現在 Completed に入っている単語はありません。単語詳細や一覧から「🏆 Completed」を選ぶとここに追加されます。'}
+                </div>
+              ` : `
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  ${unmasteredCompletedItems.map(item => renderSingleVocabCardHtml(item)).join('')}
+                </div>
+              `}
+            </section>
+
+            <!-- 2. 下の枠：Master（完全卒業・殿堂入りエリア） -->
+            <section class="rounded-2xl border border-amber-300/90 bg-gradient-to-br from-amber-50/60 via-white to-amber-50/30 p-5 shadow-xs">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 pb-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-amber-950">👑 Master（完全卒業）</h3>
+                    <span class="rounded-full bg-amber-500 px-2.5 py-0.5 text-xs font-bold text-white">${masteredCompletedItems.length} 語</span>
+                  </div>
+                  <p class="mt-0.5 text-xs text-amber-800">
+                    ランダムスペル挑戦で見事スペルまで完璧に正解し、完全卒業を果たした殿堂入りコレクションです！
+                  </p>
+                </div>
+              </div>
+
+              ${masteredCompletedItems.length === 0 ? `
+                <div class="mt-4 rounded-xl border border-dashed border-amber-200 bg-white/80 py-6 text-center text-xs font-medium text-slate-500">
+                  まだ Master に昇格した単語はありません。上の「✨ スペル挑戦！（ランダム5問）」で正解するとここへ昇格します！
+                </div>
+              ` : `
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  ${masteredCompletedItems.map(item => renderSingleVocabCardHtml(item)).join('')}
+                </div>
+              `}
+            </section>
+          </div>
+        ` : filtered.length === 0 ? `
+          <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white py-14 text-center">
+            <div class="text-3xl">📭</div>
+            <p class="mt-3 text-sm font-bold text-slate-700">このボックスにはまだ単語が保存されていません</p>
+            <p class="mt-1 text-xs text-slate-500">「🔍 単語検索」画面で英単語を調べ、Quick / Reviewing / Completed ボタンを押してストックしましょう！</p>
+            <button type="button" onclick="switchMainView('search')" class="mt-4 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700">🔍 単語検索へ戻る</button>
+          </div>
+        ` : `
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            ${filtered.map(item => renderSingleVocabCardHtml(item)).join('')}
+          </div>
+        `}
+      `;
+    }
+
+    const FALLBACK_DISTRACTOR_LIST = [
+      '至る所に存在する、どこにでもある、遍在する',
+      'つかの間の、儚（はかな）い、短命な',
+      '回復力のある、逆境に強い、しなやかな',
+      '思いがけない幸運な発見、セレンディピティ',
+      '実用主義の、実践的な、現実的な',
+      '雄弁な、説得力のある、人の心を動かす',
+      '避けられない、不可避の、必然的な',
+      '曖昧な、多義的な、解釈が分かれる'
+    ];
+
+    function buildMeaningChoicesForSession(targetItem, allItems) {
+      const correct = targetItem.jaMeaning;
+      const pool = [];
+      for (const item of allItems) {
+        if (item.word.toLowerCase() !== targetItem.word.toLowerCase() && item.jaMeaning !== correct) {
+          pool.push(item.jaMeaning);
+        }
+      }
+      for (const m of Object.values(MOCK_DB)) {
+        const ja = m.meanings?.[0]?.jaMeaning;
+        if (ja && ja !== correct && !pool.includes(ja)) {
+          pool.push(ja);
+        }
+      }
+      for (const d of FALLBACK_DISTRACTOR_LIST) {
+        if (d !== correct && !pool.includes(d)) {
+          pool.push(d);
+        }
+      }
+      const seed = targetItem.word
+        .split('')
+        .reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 1), 0);
+
+      const distractors = [];
+      for (let i = 0; i < pool.length && distractors.length < 3; i++) {
+        const pickIdx = (seed + i * 7) % pool.length;
+        const candidate = pool[pickIdx];
+        if (!distractors.includes(candidate)) {
+          distractors.push(candidate);
+        }
+      }
+      while (distractors.length < 3 && pool.length > distractors.length) {
+        const next = pool.find(p => !distractors.includes(p));
+        if (next) distractors.push(next);
+        else break;
+      }
+
+      const combined = [correct, ...distractors.slice(0, 3)];
+      const insertPos = seed % combined.length;
+      const result = [...combined.slice(1)];
+      result.splice(insertPos, 0, correct);
+      return result;
+    }
+
+    function saveReviewSessionToStorage() {
+      try {
+        if (!reviewSessionState || reviewSessionState.currentIndex >= reviewSessionState.queueWords.length) {
+          localStorage.removeItem(REVIEW_SESSION_STORAGE);
+        } else {
+          localStorage.setItem(REVIEW_SESSION_STORAGE, JSON.stringify({
+            queueWords: reviewSessionState.queueWords,
+            currentIndex: reviewSessionState.currentIndex,
+            completedWords: reviewSessionState.completedWords || [],
+            startedAt: reviewSessionState.startedAt || new Date().toISOString()
+          }));
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    function startTodayReviewSession() {
+      const allItems = getSavedWordsArray();
+      const reviewGroups = groupReviewingWordsByDue(allItems);
+      const todayDueGroup = reviewGroups.find(g => g.isTodayDue);
+      const dueItems = todayDueGroup ? todayDueGroup.items : [];
+      if (dueItems.length === 0) return;
+
+      // 当日分のすべての単語を1単語につき必ず1問以上出題する網羅キューを生成
+      // 復習画面を開いた時点では、入力欄はまっさらな白紙・前回ログも非表示でスタート
+      reviewSessionState = {
+        queueWords: dueItems.map(i => i.word.toLowerCase()),
+        currentIndex: 0,
+        completedWords: [],
+        selectedChoice: null,
+        sessionDraftSentence: '',
+        sessionCurrentFeedback: null,
+        sessionPreviousLog: null,
+        isEvaluating: false,
+        startedAt: new Date().toISOString()
+      };
+      lastWritingErrorMsg = '';
+      saveReviewSessionToStorage();
+      switchMainView('review-session', true);
+    }
+
+    function exitReviewSessionToVocab() {
+      if (reviewSessionState) {
+        reviewSessionState.sessionDraftSentence = '';
+        reviewSessionState.sessionCurrentFeedback = null;
+        reviewSessionState.sessionPreviousLog = null;
+      }
+      lastWritingErrorMsg = '';
+      switchMainView('vocabulary', true);
+    }
+
+    function selectSessionMeaningChoice(choiceIdx) {
+      if (!reviewSessionState || reviewSessionState.selectedChoice) return;
+      const currentKey = reviewSessionState.queueWords[reviewSessionState.currentIndex];
+      const allItems = getSavedWordsArray();
+      const item = allItems.find(i => i.word.toLowerCase() === currentKey);
+      if (!item) return;
+
+      const choices = buildMeaningChoicesForSession(item, allItems);
+      const picked = choices[choiceIdx];
+      if (!picked) return;
+
+      reviewSessionState.selectedChoice = picked;
+      const isCorrect = picked === item.jaMeaning;
+      // 間違えた単語は最後に再確認としてもう一度出題キューに追加し、確実に定着させる
+      if (!isCorrect && reviewSessionState.queueWords.filter(w => w === currentKey).length < 2) {
+        reviewSessionState.queueWords.push(currentKey);
+      }
+      saveReviewSessionToStorage();
+      renderReviewSessionView();
+    }
+
+    // テスト中の一時的な入力はセッション内の一時メモリにのみ保持し、詳細画面側の保存データは勝手に書き換えない
+    function handleSessionWritingInput(value) {
+      if (!reviewSessionState) return;
+      reviewSessionState.sessionDraftSentence = value;
+    }
+
+    async function submitSessionWritingForAiFeedback() {
+      if (!reviewSessionState || reviewSessionState.isEvaluating) return;
+      const currentKey = reviewSessionState.queueWords[reviewSessionState.currentIndex];
+      if (!currentKey) return;
+      const inputEl = document.getElementById('session-writing-input');
+      const userSentence = ((inputEl ? inputEl.value : '') || reviewSessionState.sessionDraftSentence || '').trim();
+      if (!userSentence) return;
+
+      const entry = MOCK_DB[currentKey] || getCachedAiEntry(currentKey) || buildFallback(currentKey);
+      const challenge = resolveWritingChallenge(entry);
+      const apiKey = getSavedKey();
+
+      // 送信前の時点で保存されていた直近1回分の作文＆添削データを「前回の要約ログ」として退避（最新1回分のみ保持）
+      const existingRec = getWritingRecord(currentKey);
+      const prevLogSnapshot =
+        existingRec && (existingRec.userSentence?.trim() || existingRec.feedback)
+          ? {
+              userSentence: existingRec.userSentence || '',
+              feedback: existingRec.feedback || null,
+              updatedAt: existingRec.updatedAt || new Date().toISOString()
+            }
+          : existingRec?.previousLog || null;
+
+      lastWritingErrorMsg = '';
+      reviewSessionState.sessionDraftSentence = userSentence;
+      reviewSessionState.isEvaluating = true;
+      renderReviewSessionView();
+
+      try {
+        let feedback = null;
+        if (apiKey) {
+          const prompt = `あなたは優しく的確なネイティブ英語講師です。
+学習者が英単語「${currentKey}」を使った以下の和文英訳課題に取り組みました。
+
+【お題の日本文】: ${challenge.jaPrompt}
+【学習者が書いた英文】: ${userSentence}
+${challenge.modelAnswerEn ? `【参考模範解答】: ${challenge.modelAnswerEn}` : ''}
+
+学習者の英文について、文法の正誤・スペルミス・「${currentKey}」の語法やニュアンスをチェックし、以下のJSONフォーマット（純粋なJSONのみ）で優しく丁寧な添削フィードバックを返してください。
+
+{
+  "ratingBadge": "総合評価の短いバッジ（例: 🌟 自然で素晴らしい表現です！ / 👍 意味はしっかり通じます！あと一歩 / 💡 語法・文法を少し直すとグッと自然になります）",
+  "isCorrectUsage": true,
+  "grammarCheckJa": "文法の正誤チェック、スペルミス、冠詞・時制、前置詞や語法の具体的な指摘・褒め言葉（日本語で優しく丁寧な解説）",
+  "correctedSentenceEn": "学習者の書いた英文の構造をなるべく活かしつつ、文法・スペルミスを正しく直した英文",
+  "naturalSuggestionEn": "ネイティブスピーカーが使うような、より自然で洗練された別表現（${currentKey}を使った1文）",
+  "nuanceAdviceJa": "なぜその表現や前置詞を使うと自然になるのかのワンポイントアドバイス（日本語）"
+}`;
+          const rawFeedback = await callGeminiJson(prompt, apiKey);
+          feedback = normalizeWritingFeedback(rawFeedback, userSentence, currentKey, challenge);
+        } else {
+          const lowerUser = userSentence.toLowerCase();
+          const baseStem = currentKey.toLowerCase().slice(0, Math.max(3, currentKey.length - 2));
+          const usedTargetWord = lowerUser.includes(currentKey.toLowerCase()) || lowerUser.includes(baseStem);
+          const notes = [];
+          if (usedTargetWord) {
+            notes.push(`ターゲット単語「${currentKey}」をしっかり文中に組み込めています！`);
+          } else {
+            notes.push(`文中に「${currentKey}」（またはその派生形）が見当たらないようです。ぜひ「${currentKey}」を使って表現してみましょう。`);
+          }
+          notes.push('※右上の「AI設定」から Gemini API キーを設定すると、スペルミスや細かい文法・ニュアンスまでAIがリアルタイムで添削します！');
+          let normalizedUser = userSentence.charAt(0).toUpperCase() + userSentence.slice(1);
+          if (!/[.!?]$/.test(normalizedUser)) normalizedUser += '.';
+          feedback = {
+            ratingBadge: usedTargetWord
+              ? '👍 ターゲット単語を使って英作文できています！（簡易チェック）'
+              : '💡 ターゲット単語を文中に入れてみましょう（簡易チェック）',
+            isCorrectUsage: usedTargetWord,
+            grammarCheckJa: notes.join(' '),
+            correctedSentenceEn: normalizedUser,
+            naturalSuggestionEn: challenge.modelAnswerEn || `Smartphones have become ${currentKey} in modern daily life.`,
+            nuanceAdviceJa: '模範解答の語順や前置詞の使い方も参考にしてみましょう。'
+          };
+        }
+
+        // 添削が完了した時点で初めて、詳細画面側のデータと同期（最新1回分の前回ログと一緒に上書き保存）
+        reviewSessionState.sessionCurrentFeedback = feedback;
+        reviewSessionState.sessionPreviousLog = prevLogSnapshot;
+        saveWritingRecord(currentKey, challenge.jaPrompt, userSentence, feedback, prevLogSnapshot);
+      } catch (err) {
+        lastWritingErrorMsg = `AI添削エラー: ${err.message || err}`;
+        showError(lastWritingErrorMsg);
+      } finally {
+        reviewSessionState.isEvaluating = false;
+        renderReviewSessionView();
+      }
+    }
+
+    function completeSessionWordAndNext(nextStatus, days) {
+      if (!reviewSessionState) return;
+      const currentKey = reviewSessionState.queueWords[reviewSessionState.currentIndex];
+      if (!currentKey) return;
+
+      const isFirstCompletionInSession = !reviewSessionState.completedWords.includes(currentKey);
+      changeStatusFromList(
+        currentKey,
+        nextStatus,
+        days !== undefined ? Number(days) : undefined,
+        isFirstCompletionInSession
+      );
+      if (isFirstCompletionInSession) {
+        reviewSessionState.completedWords.push(currentKey);
+      }
+      reviewSessionState.currentIndex += 1;
+      reviewSessionState.selectedChoice = null;
+      reviewSessionState.sessionDraftSentence = '';
+      reviewSessionState.sessionCurrentFeedback = null;
+      reviewSessionState.sessionPreviousLog = null;
+      lastWritingErrorMsg = '';
+      saveReviewSessionToStorage();
+      renderReviewSessionView();
+    }
+
+    const REVIEW_COMPLETION_CHEER_MESSAGES = [
+      '自分で考え、形にした蓄積が大きな自信につながります。お見事な完走です！',
+      '思考のプロセスを伴う復習は定着率が段違いです。素晴らしい集中力でした！',
+      'じっくりと頭を動かした分だけ、確実に実力がアップデートされています。本当にお疲れ様です！',
+      '昨日の自分より確実にステップアップしています。素晴らしいです！',
+      '今日の努力は、確実に未来の自分の助けになります。ナイスファイト！'
+    ];
+
+    function renderReviewSessionView() {
+      const box = document.getElementById('review-session-container');
+      if (!box) return;
+
+      const allItems = getSavedWordsArray();
+      if (!reviewSessionState || reviewSessionState.queueWords.length === 0 || reviewSessionState.currentIndex >= reviewSessionState.queueWords.length) {
+        localStorage.removeItem(REVIEW_SESSION_STORAGE);
+        const randomCheer = REVIEW_COMPLETION_CHEER_MESSAGES[
+          Math.floor(Math.random() * REVIEW_COMPLETION_CHEER_MESSAGES.length)
+        ];
+        box.innerHTML = `
+          <div class="rounded-2xl border border-emerald-200 bg-white p-8 text-center shadow-sm">
+            <div class="text-4xl">🏆</div>
+            <h2 class="mt-4 text-xl font-bold text-slate-900">🎉 今日の復習テスト＆英作文をすべて完了しました！</h2>
+            <p class="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
+              本日分の対象単語を1単語も漏らさず網羅して復習・英作文しました。<br/>
+              ${escapeHtmlText(randomCheer)}
+            </p>
+            <button type="button" onclick="exitReviewSessionToVocab()" class="mt-6 rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700">
+              📚 マイ単語帳（Reviewing一覧）へ戻る
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const currentIdx = reviewSessionState.currentIndex;
+      const currentKey = reviewSessionState.queueWords[currentIdx];
+      const currentSaved = allItems.find(i => i.word.toLowerCase() === currentKey) || {
+        word: currentKey,
+        partOfSpeech: '単語',
+        jaMeaning: MOCK_DB[currentKey]?.meanings?.[0]?.jaMeaning || '（意味データ）',
+        ipa: MOCK_DB[currentKey]?.pronunciation?.ipa || `/${currentKey}/`,
+        coreImage: MOCK_DB[currentKey]?.etymology?.coreImage || ''
+      };
+      const entry = MOCK_DB[currentKey] || getCachedAiEntry(currentKey) || buildFallback(currentKey);
+      const challenge = resolveWritingChallenge(entry);
+      const choices = buildMeaningChoicesForSession(currentSaved, allItems);
+      const selectedChoice = reviewSessionState.selectedChoice;
+      const isChoiceCorrect = selectedChoice === currentSaved.jaMeaning;
+      const userSentence = reviewSessionState.sessionDraftSentence || '';
+      const feedback = reviewSessionState.sessionCurrentFeedback || null;
+      const previousLog = feedback ? (reviewSessionState.sessionPreviousLog || null) : null;
+      const safeW = currentSaved.word.replace(/'/g, "\\'");
+
+      box.innerHTML = `
+        <!-- トップバー：一覧へ戻る ＆ 全単語網羅プログレス -->
+        <div class="rounded-2xl border border-indigo-100 bg-white p-4 shadow-2xs sm:p-5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <button type="button" onclick="exitReviewSessionToVocab()" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100">
+              ← 一覧へ戻る（進捗は自動保存）
+            </button>
+            <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-800">
+              📝 今日の網羅復習テスト：第 ${currentIdx + 1} 問 / 全 ${reviewSessionState.queueWords.length} 問
+            </span>
+          </div>
+
+          <div class="mt-3 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3">
+            <span class="text-[11px] font-bold text-slate-500">本日の出題リスト（1単語につき必ず1問以上出題）:</span>
+            ${reviewSessionState.queueWords.map((w, idx) => {
+              const isCurrent = idx === currentIdx;
+              const isDone = idx < currentIdx;
+              return `
+                <span class="inline-flex items-center gap-1 rounded-lg px-2.5 py-0.5 text-xs font-bold ${
+                  isCurrent ? 'bg-indigo-600 text-white ring-2 ring-indigo-500/30' : isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                }">
+                  <span>${isDone ? '✓' : `${idx + 1}.`}</span>
+                  <span>${escapeHtmlText(w)}</span>
+                </span>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Step 1: 単語の意味チェック（4択クイズ） -->
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">❓ Step 1. 単語の意味チェック（4択クイズ）</h3>
+            <span class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700">${escapeHtmlText(currentSaved.partOfSpeech)}</span>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-xl bg-slate-50 p-4">
+            <div>
+              <span class="text-xs font-semibold text-slate-400">問題ワード:</span>
+              <div class="mt-0.5 flex flex-wrap items-baseline gap-3">
+                <h2 class="font-serif-en text-3xl font-bold text-slate-900">${escapeHtmlText(currentSaved.word)}</h2>
+                <span class="font-mono text-sm text-slate-600">${escapeHtmlText(currentSaved.ipa)}</span>
+              </div>
+            </div>
+            <button type="button" onclick="speakText('${safeW}', 'en-US')" class="rounded-xl border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100">
+              🔊 発音を聴く
+            </button>
+          </div>
+
+          <p class="mt-4 text-xs font-bold text-slate-600">「${escapeHtmlText(currentSaved.word)}」の意味として最も適切なものを選んでください:</p>
+
+          <div class="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            ${choices.map((c, idx) => {
+              const isSelected = selectedChoice === c;
+              const isAns = c === currentSaved.jaMeaning;
+              let btnStyle = 'border-slate-200 bg-white text-slate-800 hover:border-indigo-300 hover:bg-indigo-50/40';
+              if (selectedChoice) {
+                if (isAns) {
+                  btnStyle = 'border-emerald-500 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-500/20';
+                } else if (isSelected && !isAns) {
+                  btnStyle = 'border-rose-400 bg-rose-50 text-rose-900';
+                } else {
+                  btnStyle = 'border-slate-200 bg-slate-50 text-slate-400 opacity-70';
+                }
+              }
+              return `
+                <button
+                  type="button"
+                  ${selectedChoice ? 'disabled' : ''}
+                  onclick="selectSessionMeaningChoice(${idx})"
+                  class="flex items-start gap-2.5 rounded-xl border p-3.5 text-left text-xs font-bold leading-relaxed transition sm:text-sm ${btnStyle}"
+                >
+                  <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] text-slate-700">${idx + 1}</span>
+                  <span>${escapeHtmlText(c)}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          ${selectedChoice ? `
+            <div class="mt-4 rounded-xl border p-3.5 text-xs ${isChoiceCorrect ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-rose-200 bg-rose-50 text-rose-900'}">
+              <div class="font-bold">
+                ${isChoiceCorrect
+                  ? '⭕ 正解です！しっかり意味を覚えていますね。'
+                  : `❌ 惜しい！正解は「${escapeHtmlText(currentSaved.jaMeaning)}」です（最後に再確認としてもう一度出題されます）。`}
+              </div>
+              ${currentSaved.coreImage ? `<div class="mt-1 text-slate-700">🧭 コアイメージ: ${escapeHtmlText(currentSaved.coreImage)}</div>` : ''}
+            </div>
+          ` : ''}
+        </section>
+
+        <!-- Step 2: 短文の和訳作文お題 ＆ Gemini AIの優しい添削 -->
+        <section class="rounded-2xl border border-indigo-200/90 bg-gradient-to-br from-white via-white to-indigo-50/40 p-5 shadow-xs sm:p-6">
+          <div class="border-b border-indigo-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">✍️ Step 2. 実践・短文の和訳英作文 ＆ AI添削</h3>
+          </div>
+
+          <div class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-4">
+            <span class="inline-flex items-center rounded-lg bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
+              お題（「${escapeHtmlText(currentSaved.word)}」を使って英訳してみましょう）
+            </span>
+            <p class="mt-2.5 text-sm font-bold leading-relaxed text-slate-900 sm:text-base">
+              「${escapeHtmlText(challenge.jaPrompt)}」
+            </p>
+            ${challenge.hint ? `<p class="mt-2 text-xs font-medium text-indigo-800">💡 ヒント: ${escapeHtmlText(challenge.hint)}</p>` : ''}
+          </div>
+
+          <div class="mt-4 space-y-3">
+            <textarea
+              id="session-writing-input"
+              rows="2"
+              oninput="handleSessionWritingInput(this.value)"
+              placeholder="作文する..."
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15"
+            >${escapeHtmlText(userSentence)}</textarea>
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs text-slate-500">スペルミスや文法の細かい点も Gemini AI が優しく添削・アドバイスします</span>
+              <button
+                type="button"
+                onclick="submitSessionWritingForAiFeedback()"
+                class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700 sm:text-sm"
+              >
+                <span>${reviewSessionState.isEvaluating ? '⏳ AIが添削中...' : '✨ AIに添削してもらう（送信）'}</span>
+              </button>
+            </div>
+            ${lastWritingErrorMsg ? `
+              <div class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800">
+                ⚠️ ${escapeHtmlText(lastWritingErrorMsg)}
+              </div>
+            ` : ''}
+          </div>
+
+          ${feedback ? `
+            <div class="mt-4 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+                  ${escapeHtmlText(feedback.ratingBadge)}
+                </span>
+              </div>
+
+              <div class="rounded-xl border border-emerald-100 bg-white p-3.5">
+                <div class="text-xs font-bold text-slate-700">📋 文法・スペル・語法フィードバック</div>
+                <p class="mt-1 text-xs leading-relaxed text-slate-700 sm:text-sm">${escapeHtmlText(feedback.grammarCheckJa)}</p>
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-indigo-100 bg-white p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-indigo-700">✏️ あなたの文を活かした修正案</span>
+                    <button type="button" onclick="speakText(\`${(feedback.correctedSentenceEn || '').replace(/`/g, '')}\`, 'en-US')" class="text-xs font-semibold text-indigo-600 hover:underline">🔊 再生</button>
+                  </div>
+                  <p class="mt-1.5 font-serif-en text-sm font-bold text-slate-900">${escapeHtmlText(feedback.correctedSentenceEn)}</p>
+                </div>
+
+                <div class="rounded-xl border border-amber-200/80 bg-white p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-amber-800">🌟 より自然で洗練された表現の提案</span>
+                    <button type="button" onclick="speakText(\`${(feedback.naturalSuggestionEn || '').replace(/`/g, '')}\`, 'en-US')" class="text-xs font-semibold text-amber-700 hover:underline">🔊 再生</button>
+                  </div>
+                  <p class="mt-1.5 font-serif-en text-sm font-bold text-slate-900">${escapeHtmlText(feedback.naturalSuggestionEn)}</p>
+                </div>
+              </div>
+
+              ${feedback.nuanceAdviceJa ? `
+                <div class="rounded-xl bg-white/90 px-3.5 py-2.5 text-xs leading-relaxed text-slate-700">
+                  <strong class="font-bold text-indigo-800">💡 表現・ニュアンスのポイント: </strong>
+                  ${escapeHtmlText(feedback.nuanceAdviceJa)}
+                </div>
+              ` : ''}
+            </div>
+
+            ${previousLog && (previousLog.userSentence || previousLog.feedback) ? `
+              <!-- 今回のAI添削結果のすぐ下（直後）に表示：前回の要約ログ（最新1回分のみ） -->
+              <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50/90 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
+                  <span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                    🕒 前回の英作文＆添削の要約ログ
+                  </span>
+                  ${previousLog.feedback?.ratingBadge ? `
+                    <span class="rounded-md bg-slate-200/80 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
+                      ${escapeHtmlText(previousLog.feedback.ratingBadge)}
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="mt-2.5 space-y-2 text-xs">
+                  ${previousLog.userSentence ? `
+                    <div>
+                      <span class="font-bold text-slate-500">📝 前回の英作文: </span>
+                      <span class="font-serif-en font-semibold text-slate-800">${escapeHtmlText(previousLog.userSentence)}</span>
+                    </div>
+                  ` : ''}
+                  ${previousLog.feedback?.correctedSentenceEn ? `
+                    <div>
+                      <span class="font-bold text-indigo-600">✏️ 前回の修正案: </span>
+                      <span class="font-serif-en font-semibold text-slate-800">${escapeHtmlText(previousLog.feedback.correctedSentenceEn)}</span>
+                    </div>
+                  ` : ''}
+                  ${previousLog.feedback?.grammarCheckJa ? `
+                    <div class="rounded-lg border border-slate-200/70 bg-white px-3 py-2 leading-relaxed text-slate-600">
+                      <span class="font-bold text-slate-700">💡 前回のフィードバック要約: </span>
+                      ${escapeHtmlText(previousLog.feedback.grammarCheckJa)}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            ` : ''}
+          ` : ''}
+        </section>
+
+        <!-- Step 3: 次回の復習スパンを選択して次の単語へ進む -->
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+          <div class="border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">📅 Step 3. 「${escapeHtmlText(currentSaved.word)}」の次回復習スパンを決めて次へ進む</h3>
+          </div>
+          <p class="mt-2.5 text-xs text-slate-600">
+            手応えに応じて次回の復習スパン（または Completed 卒業）を選択すると、具体的な予定日（YYYY-MM-DD）を保存して次の単語へ進みます:
+          </p>
+          <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            ${[
+              { days: 1, label: '1日後' },
+              { days: 4, label: '4日後' },
+              { days: 7, label: '7日後' },
+              { days: 30, label: '1ヶ月後' }
+            ].map(opt => `
+              <button
+                type="button"
+                onclick="completeSessionWordAndNext('reviewing', ${opt.days})"
+                class="flex flex-col items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2.5 text-center transition hover:border-indigo-500 hover:bg-indigo-100"
+              >
+                <span class="text-xs font-bold text-indigo-950">🔄 ${opt.label}</span>
+                <span class="mt-0.5 font-mono text-[10px] text-indigo-700">${computeNextReviewIso(opt.days)}</span>
+              </button>
+            `).join('')}
+
+            <button
+              type="button"
+              onclick="completeSessionWordAndNext('completed')"
+              class="col-span-2 flex flex-col items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-center transition hover:border-emerald-600 hover:bg-emerald-100 sm:col-span-1"
+            >
+              <span class="text-xs font-bold text-emerald-950">🏆 Completed</span>
+              <span class="mt-0.5 text-[10px] text-emerald-700">卒業ボックスへ</span>
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    function normalizeSpellAnswer(str) {
+      return String(str || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+    }
+
+    function startSpellChallengeSession() {
+      const allItems = getSavedWordsArray();
+      const candidates = allItems.filter(i => i.status === 'completed' && !i.isMastered);
+      if (candidates.length === 0) return;
+
+      // Fisher-Yates シャッフルでランダムに最大5単語をピックアップ
+      const shuffled = [...candidates];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+      }
+      const picked = shuffled.slice(0, 5);
+
+      spellChallengeState = {
+        queueWords: picked.map(i => i.word.toLowerCase()),
+        currentIndex: 0,
+        userAnswer: '',
+        submitted: false,
+        isCorrect: false,
+        promotedWords: [],
+        missedWords: []
+      };
+
+      switchMainView('spell-challenge', true);
+    }
+
+    function handleSpellInput(val) {
+      if (!spellChallengeState || spellChallengeState.submitted) return;
+      spellChallengeState.userAnswer = val;
+    }
+
+    function submitSpellChallengeAnswer(e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      if (!spellChallengeState || spellChallengeState.submitted) return;
+      const currentKey = spellChallengeState.queueWords[spellChallengeState.currentIndex];
+      if (!currentKey) return;
+
+      const typed = normalizeSpellAnswer(spellChallengeState.userAnswer);
+      if (!typed) return;
+
+      const expected = normalizeSpellAnswer(currentKey);
+      const isCorrect = typed === expected;
+      spellChallengeState.submitted = true;
+      spellChallengeState.isCorrect = isCorrect;
+
+      if (isCorrect) {
+        promoteWordToMaster(currentKey);
+        if (!spellChallengeState.promotedWords.includes(currentKey)) {
+          spellChallengeState.promotedWords.push(currentKey);
+        }
+      } else {
+        if (!spellChallengeState.missedWords.includes(currentKey)) {
+          spellChallengeState.missedWords.push(currentKey);
+        }
+      }
+
+      renderSpellChallengeView();
+    }
+
+    function nextSpellChallengeQuestion() {
+      if (!spellChallengeState) return;
+      spellChallengeState.currentIndex += 1;
+      spellChallengeState.userAnswer = '';
+      spellChallengeState.submitted = false;
+      spellChallengeState.isCorrect = false;
+      renderSpellChallengeView();
+    }
+
+    function finishSpellChallengeAndReturn() {
+      spellChallengeState = null;
+      activeVocabTab = 'completed';
+      switchMainView('vocabulary', true);
+    }
+
+    function renderSpellChallengeView() {
+      const box = document.getElementById('spell-challenge-container');
+      if (!box) return;
+
+      if (!spellChallengeState || spellChallengeState.queueWords.length === 0 || spellChallengeState.currentIndex >= spellChallengeState.queueWords.length) {
+        const promoted = spellChallengeState ? spellChallengeState.promotedWords : [];
+        const missed = spellChallengeState ? spellChallengeState.missedWords : [];
+        const total = promoted.length + missed.length;
+        box.innerHTML = `
+          <div class="rounded-2xl border border-emerald-200 bg-white p-8 text-center shadow-sm">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-3xl">👑</div>
+            <h2 class="mt-4 text-xl font-bold text-slate-900">✨ スペル挑戦（全${total}問）が完了しました！</h2>
+            <p class="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
+              今回のスコア: <strong class="font-bold text-emerald-700">${total}問中 ${promoted.length}問 正解（Master昇格！）</strong>
+            </p>
+
+            <div class="mt-5 grid grid-cols-1 gap-4 text-left sm:grid-cols-2">
+              <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <div class="text-xs font-bold text-amber-900">👑 Master（完全卒業）に昇格した単語 (${promoted.length})</div>
+                ${promoted.length === 0 ? `
+                  <p class="mt-2 text-xs text-slate-500">今回は昇格した単語はありませんでした。何度でも再挑戦できます！</p>
+                ` : `
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    ${promoted.map(w => `
+                      <span class="rounded-lg border border-amber-300 bg-white px-2.5 py-1 font-serif-en text-sm font-bold text-amber-900">👑 ${escapeHtmlText(w)}</span>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+
+              <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div class="text-xs font-bold text-slate-700">🔄 Completedに残った単語・次回リベンジ (${missed.length})</div>
+                ${missed.length === 0 ? `
+                  <p class="mt-2 text-xs text-emerald-700 font-semibold">全問正解！ミスした単語は0語です🎉</p>
+                ` : `
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    ${missed.map(w => `
+                      <span class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 font-serif-en text-sm font-semibold text-slate-700">${escapeHtmlText(w)}</span>
+                    `).join('')}
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onclick="finishSpellChallengeAndReturn()"
+              class="mt-6 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-700"
+            >
+              <span>🏆 Completed（卒業・Master一覧）へ戻る</span>
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const currentKey = spellChallengeState.queueWords[spellChallengeState.currentIndex];
+      const currentSaved = getSavedItem(currentKey);
+      if (!currentSaved) {
+        nextSpellChallengeQuestion();
+        return;
+      }
+
+      const totalCount = spellChallengeState.queueWords.length;
+      const currentNum = spellChallengeState.currentIndex + 1;
+      const safeW = currentSaved.word.replace(/'/g, "\\'");
+
+      box.innerHTML = `
+        <!-- 上部ナビ＆進捗バー -->
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3.5 shadow-2xs">
+          <button
+            type="button"
+            onclick="finishSpellChallengeAndReturn()"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+          >
+            ← Completed一覧へ戻る
+          </button>
+
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-600">
+              ✨ スペル挑戦: <strong class="text-emerald-700">${currentNum} / ${totalCount} 問目</strong>
+            </span>
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
+              👑 今回昇格: ${spellChallengeState.promotedWords.length} 語
+            </span>
+          </div>
+        </div>
+
+        <!-- スペル問題カード -->
+        <section class="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-white via-white to-emerald-50/40 p-6 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">
+              問題 ${currentNum} / ${totalCount}（正解で 👑 Master へ昇格！）
+            </span>
+            <button
+              type="button"
+              onclick="speakText('${safeW}', 'en-US')"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+            >
+              🔊 発音ヒントを聴く
+            </button>
+          </div>
+
+          <div class="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+            <div class="flex items-baseline gap-2">
+              <span class="rounded bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700">${escapeHtmlText(currentSaved.partOfSpeech)}</span>
+              <span class="text-xs text-slate-400">次の意味を表す英単語・フレーズのスペルを入力してください:</span>
+            </div>
+            <p class="mt-2 text-lg font-bold text-slate-900 sm:text-xl">
+              ${escapeHtmlText(currentSaved.jaMeaning)}
+            </p>
+            ${currentSaved.coreImage ? `
+              <p class="mt-2.5 rounded-lg bg-amber-50/80 px-3 py-1.5 text-xs font-medium text-amber-900">
+                🧭 コアイメージヒント: ${escapeHtmlText(currentSaved.coreImage)}
+              </p>
+            ` : ''}
+          </div>
+
+          <!-- ガチ・スペル入力フォーム（予測変換・自動補正オフ） -->
+          <form onsubmit="submitSpellChallengeAnswer(event)" class="mt-5 space-y-3">
+            <div>
+              <label for="spell-challenge-input" class="block text-xs font-bold text-slate-700">
+                ✍️ 英単語・フレーズのスペルを入力（予測変換オフ）:
+              </label>
+              <div class="mt-1.5 flex flex-col gap-2.5 sm:flex-row">
+                <input
+                  id="spell-challenge-input"
+                  type="text"
+                  value="${escapeHtmlText(spellChallengeState.userAnswer)}"
+                  oninput="handleSpellInput(this.value)"
+                  ${spellChallengeState.submitted ? 'disabled' : ''}
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  placeholder="正確なスペルをタイピング..."
+                  class="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 font-mono text-base font-bold text-slate-900 placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/15 disabled:bg-slate-100"
+                />
+                ${!spellChallengeState.submitted ? `
+                  <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-700"
+                  >
+                    <span>判定する</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          </form>
+
+          <!-- 判定結果表示 -->
+          ${spellChallengeState.submitted ? `
+            <div class="mt-5 rounded-xl border p-4 ${
+              spellChallengeState.isCorrect
+                ? 'border-amber-300 bg-amber-50/80 text-amber-950'
+                : 'border-rose-200 bg-rose-50/80 text-rose-950'
+            }">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="text-sm font-bold">
+                  ${spellChallengeState.isCorrect
+                    ? '🎉 大正解！！「👑 Master（完全卒業）」に昇格しました！'
+                    : '💦 おしい！今回は不正解のため Completed に残ります（次回また再挑戦できます！）'}
+                </div>
+                <button
+                  type="button"
+                  onclick="speakText('${safeW}', 'en-US')"
+                  class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  🔊 正しい発音
+                </button>
+              </div>
+
+              <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div class="rounded-lg border border-slate-200/80 bg-white px-3.5 py-2.5">
+                  <div class="text-[11px] font-bold text-slate-400">あなたの入力:</div>
+                  <div class="mt-0.5 font-mono text-base font-bold ${spellChallengeState.isCorrect ? 'text-emerald-700' : 'text-rose-600'}">
+                    ${escapeHtmlText(spellChallengeState.userAnswer)}
+                  </div>
+                </div>
+                <div class="rounded-lg border border-emerald-200 bg-white px-3.5 py-2.5">
+                  <div class="text-[11px] font-bold text-emerald-700">正しいスペル:</div>
+                  <div class="mt-0.5 font-mono text-base font-bold text-slate-900">
+                    ${escapeHtmlText(currentSaved.word)}
+                    <span class="ml-2 text-xs font-normal text-slate-500">${escapeHtmlText(currentSaved.ipa || '')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onclick="nextSpellChallengeQuestion()"
+                  class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700 sm:text-sm"
+                >
+                  <span>${currentNum < totalCount ? '次の問題へ進む →' : '結果発表を見る 🏆'}</span>
+                </button>
+              </div>
+            </div>
+          ` : ''}
+        </section>
+      `;
+
+      if (!spellChallengeState.submitted) {
+        const inputEl = document.getElementById('spell-challenge-input');
+        if (inputEl) {
+          inputEl.focus();
+        }
+      }
+    }
+
+    function renderWritingPracticeSection(entry, isPending = false) {
+      if (isPending) {
+        return `
+          <!-- 6. すべての解説の直後＆メモ欄のすぐ上：実践・和文英訳トレーニング＆AI添削コーナー -->
+          <section class="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-white to-indigo-50/40 p-5 shadow-xs sm:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+              <h3 class="text-base font-bold text-slate-900">✍️ 実践・和文英訳トレーニング ＆ AI添削</h3>
+            </div>
+            ${renderSkeletonBox('実践的な和文英訳のお題とヒントを作成中...')}
+          </section>
+        `;
+      }
+
+      const challenge = resolveWritingChallenge(entry);
+      const record = getWritingRecord(entry.word);
+      const userSentence = record?.userSentence || '';
+      const feedback = record?.feedback || null;
+      const hasKey = Boolean(getSavedKey());
+
+      return `
+        <!-- 6. すべての解説の直後＆メモ欄のすぐ上：実践・和文英訳トレーニング＆AI添削コーナー -->
+        <section class="rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-white via-white to-indigo-50/40 p-5 shadow-xs sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">✍️ 実践・和文英訳トレーニング ＆ AI添削</h3>
+          </div>
+
+          <!-- お題ボックス -->
+          <div class="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-0.5 text-xs font-bold text-white">
+                お題（「${escapeHtmlText(entry.word)}」を使って英訳してみましょう）
+              </span>
+              ${challenge.modelAnswerEn ? `
+                <button type="button" onclick="toggleModelAnswer()" class="text-xs font-semibold text-indigo-700 hover:underline">
+                  ${showModelAnswerFlag ? '🙈 模範解答を隠す' : '👁️ 模範解答を見る'}
+                </button>
+              ` : ''}
+            </div>
+
+            <p class="mt-2.5 text-sm font-bold leading-relaxed text-slate-900 sm:text-base">
+              「${escapeHtmlText(challenge.jaPrompt)}」
+            </p>
+
+            ${challenge.hint ? `
+              <p class="mt-2 text-xs font-medium text-indigo-800">
+                💡 ヒント: ${escapeHtmlText(challenge.hint)}
+              </p>
+            ` : ''}
+
+            ${showModelAnswerFlag && challenge.modelAnswerEn ? `
+              <div class="mt-3 flex items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-white px-3.5 py-2.5">
+                <div>
+                  <span class="text-[11px] font-bold text-indigo-600">模範解答例:</span>
+                  <p class="font-serif-en text-sm font-semibold text-slate-900">${escapeHtmlText(challenge.modelAnswerEn)}</p>
+                </div>
+                <button type="button" onclick="speakText(\`${(challenge.modelAnswerEn || '').replace(/`/g, '')}\`, 'en-US')" class="shrink-0 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
+                  🔊 発音
+                </button>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- 英文入力＆送信 -->
+          <div class="mt-4 space-y-3">
+            <div>
+              <label for="writing-practice-input" class="block text-xs font-bold text-slate-700">
+                あなたの英作文（${escapeHtmlText(entry.word)} を使って英文を作成）:
+              </label>
+              <textarea
+                id="writing-practice-input"
+                rows="2"
+                oninput="handleWritingInput(this.value)"
+                placeholder="作文する..."
+                class="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15"
+              >${escapeHtmlText(userSentence)}</textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs text-slate-500">
+                ${hasKey
+                  ? '✨ Gemini AI が文法・前置詞・ニュアンスを即座に添削します'
+                  : '💡 AI設定でAPIキーを登録すると、Gemini AIによる本格添削が利用できます'}
+              </span>
+              <button
+                id="writing-submit-btn"
+                type="button"
+                onclick="submitWritingForAiFeedback()"
+                class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700 sm:text-sm"
+              >
+                <span>${isEvaluatingWriting ? '⏳ AIが添削中...' : '✨ AIに添削してもらう（送信）'}</span>
+              </button>
+            </div>
+            ${lastWritingErrorMsg ? `
+              <div class="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800">
+                ⚠️ ${escapeHtmlText(lastWritingErrorMsg)}
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- AI添削結果 -->
+          ${feedback ? `
+            <div class="mt-4 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white">
+                  ${escapeHtmlText(feedback.ratingBadge)}
+                </span>
+                <span class="text-[11px] font-medium text-emerald-800">
+                  ✓ 添削結果もLocalStorageに保存済み
+                </span>
+              </div>
+
+              <div class="rounded-xl border border-emerald-100 bg-white p-3.5">
+                <div class="text-xs font-bold text-slate-700">📋 文法の正誤チェック・語法フィードバック</div>
+                <p class="mt-1 text-xs leading-relaxed text-slate-700 sm:text-sm">${escapeHtmlText(feedback.grammarCheckJa)}</p>
+              </div>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="rounded-xl border border-indigo-100 bg-white p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-indigo-700">✏️ あなたの文を活かした修正案</span>
+                    <button type="button" onclick="speakText(\`${(feedback.correctedSentenceEn || '').replace(/`/g, '')}\`, 'en-US')" class="text-xs font-semibold text-indigo-600 hover:underline">🔊 再生</button>
+                  </div>
+                  <p class="mt-1.5 font-serif-en text-sm font-bold text-slate-900">${escapeHtmlText(feedback.correctedSentenceEn)}</p>
+                </div>
+
+                <div class="rounded-xl border border-amber-200/80 bg-white p-3.5">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-bold text-amber-800">🌟 より自然で洗練された表現の提案</span>
+                    <button type="button" onclick="speakText(\`${(feedback.naturalSuggestionEn || '').replace(/`/g, '')}\`, 'en-US')" class="text-xs font-semibold text-amber-700 hover:underline">🔊 再生</button>
+                  </div>
+                  <p class="mt-1.5 font-serif-en text-sm font-bold text-slate-900">${escapeHtmlText(feedback.naturalSuggestionEn)}</p>
+                </div>
+              </div>
+
+              ${feedback.nuanceAdviceJa ? `
+                <div class="rounded-xl bg-white/90 px-3.5 py-2.5 text-xs leading-relaxed text-slate-700">
+                  <strong class="font-bold text-indigo-800">💡 表現・ニュアンスのポイント: </strong>
+                  ${escapeHtmlText(feedback.nuanceAdviceJa)}
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
+        </section>
+      `;
+    }
+
+    function renderEntry(entry, isCached = false, loadingStage = 'done') {
+      if (currentWord.toLowerCase() !== (entry.word || '').toLowerCase()) {
+        showModelAnswerFlag = false;
+      }
+      currentWord = entry.word;
+      currentEntryObj = entry;
+      currentIsCached = isCached;
+      currentLoadingStage = loadingStage;
+      document.getElementById('search-input').value = entry.word;
+      renderPresets();
+      renderHistory();
+
+      // もしすでにストックされている単語で、AI詳細データが新しく届いた場合は意味やコアイメージ・お題も自動更新しておく
+      const existingSaved = getSavedItem(entry.word);
+      if (existingSaved && loadingStage !== 'stage1' && entry.meanings?.[0]?.jaMeaning) {
+        const map = loadSavedWordsMap();
+        const key = entry.word.trim().toLowerCase();
+        map[key] = {
+          ...existingSaved,
+          partOfSpeech: entry.pronunciation?.partOfSpeech || existingSaved.partOfSpeech,
+          jaMeaning: entry.meanings[0].jaMeaning,
+          ipa: entry.pronunciation?.ipa || existingSaved.ipa,
+          coreImage: entry.etymology?.coreImage || existingSaved.coreImage,
+          writingChallenge: loadingStage === 'done' ? resolveWritingChallenge(entry) : existingSaved.writingChallenge
+        };
+        saveWordsMap(map);
+      }
+
+      const isCorePending = loadingStage === 'stage1';
+      const isDeepPending = loadingStage === 'stage1' || loadingStage === 'stage2';
+
+      const hasKey = Boolean(getSavedKey());
+      const sourceBadge = isCorePending || isDeepPending
+        ? `<span class="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800"><span class="h-2 w-2 animate-ping rounded-full bg-indigo-600"></span>AI作成中...</span>`
+        : entry.source === 'ai'
+        ? `<span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">✨ Gemini AI 生成${isCached ? ' (キャッシュ即時表示)' : ''}</span>`
+        : entry.source === 'mock'
+        ? `<span class="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">⚡ 厳選解説データ (即時表示)</span>`
+        : `<span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">オフライン簡易表示</span>`;
+
+      const regenerateBtn = hasKey && !isCorePending && !isDeepPending
+        ? `<button onclick="triggerSearch('${entry.word.replace(/'/g, "\\'")}', true)" class="rounded-lg border border-emerald-200 bg-emerald-50/70 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100" title="Gemini AIで新しく生成し直す">🔄 AIで再生成</button>`
+        : '';
+
+      const container = document.getElementById('detail-container');
+      const prevMemoEl = document.getElementById('detail-memo-input');
+      const hadMemoFocus = document.activeElement === prevMemoEl;
+      const prevSelStart = hadMemoFocus && prevMemoEl ? prevMemoEl.selectionStart : null;
+      const prevSelEnd = hadMemoFocus && prevMemoEl ? prevMemoEl.selectionEnd : null;
+
+      const prevWritingEl = document.getElementById('writing-practice-input');
+      const hadWritingFocus = document.activeElement === prevWritingEl;
+      const prevWritingSelStart = hadWritingFocus && prevWritingEl ? prevWritingEl.selectionStart : null;
+      const prevWritingSelEnd = hadWritingFocus && prevWritingEl ? prevWritingEl.selectionEnd : null;
+
+      container.innerHTML = `
+        <section class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-white to-indigo-50/50 p-5 shadow-sm sm:p-7">
+          <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+              <div class="flex flex-wrap items-center gap-2.5">
+                ${isCorePending ? `
+                  <span class="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 animate-pulse">品詞・音節を解析中...</span>
+                ` : `
+                  <span class="rounded-lg bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-800">${entry.pronunciation.partOfSpeech}</span>
+                  <span class="text-sm text-slate-500">音節: <strong class="text-slate-700">${entry.pronunciation.syllables}</strong></span>
+                `}
+                ${sourceBadge}
+                ${regenerateBtn}
+              </div>
+              <h2 class="mt-2 font-serif-en text-3xl font-bold text-slate-900 sm:text-4xl">${entry.word}</h2>
+              ${isCorePending ? `
+                <div class="mt-3 flex items-center gap-2 text-xs font-semibold text-indigo-600">
+                  <div class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600"></div>
+                  <span>発音記号（IPA）とワンポイント発音ガイドを作成中...</span>
+                </div>
+              ` : `
+                <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
+                  <div class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-mono text-slate-800">
+                    <span class="text-xs font-bold text-indigo-600">US</span> ${entry.pronunciation.ipa}
+                  </div>
+                  <div class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-mono text-slate-700">
+                    <span class="text-xs font-bold text-rose-600">UK</span> ${entry.pronunciation.ukIpa || entry.pronunciation.ipa}
+                  </div>
+                  <span class="text-xs text-slate-500">💡 ${entry.pronunciation.phoneticHintJa || ''}</span>
+                </div>
+              `}
+            </div>
+            <div class="flex flex-wrap gap-2 sm:flex-col sm:items-end">
+              <button onclick="speakText('${entry.word.replace(/'/g, "\\'")}', 'en-US')" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100">🔊 US 発音を聴く</button>
+              <button onclick="speakText('${entry.word.replace(/'/g, "\\'")}', 'en-GB')" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">🔊 UK 発音を聴く</button>
+            </div>
+          </div>
+          ${renderStatusBarForCard(entry)}
+        </section>
+
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 lg:col-span-7">
+            <h3 class="border-b border-slate-100 pb-3 text-base font-bold text-slate-900">📖 日本語の意味 & 英英辞典の定義・例文</h3>
+            ${isCorePending ? renderSkeletonBox('日本語の意味・英英辞典の定義・例文を作成中...') : `
+              <div class="mt-4 space-y-5">
+                ${(entry.meanings || []).map(m => `
+                  <div class="space-y-3">
+                    <div class="flex items-baseline gap-2">
+                      <span class="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">${m.partOfSpeech}</span>
+                      <p class="text-lg font-bold text-slate-900">${m.jaMeaning}</p>
+                    </div>
+                    <div class="rounded-xl border-l-4 border-indigo-500 bg-slate-50 p-3.5">
+                      <div class="text-xs font-bold uppercase text-indigo-600">English Definition (英英定義)</div>
+                      <p class="mt-1 font-serif-en text-sm leading-relaxed text-slate-800">${m.enDefinition}</p>
+                    </div>
+                    <div class="space-y-2">
+                      <p class="text-xs font-semibold text-slate-500">実践例文 (Examples)</p>
+                      ${(m.examples || []).map(ex => `
+                        <div class="rounded-xl border border-slate-200/80 p-3.5">
+                          <div class="flex items-start justify-between gap-2">
+                            <p class="text-sm font-medium text-slate-900">${ex.en}</p>
+                            <button onclick="speakText(\`${(ex.en || '').replace(/`/g, '')}\`, 'en-US')" class="text-xs text-indigo-600 hover:underline shrink-0">🔊 再生</button>
+                          </div>
+                          <p class="mt-1 text-xs text-slate-600">${ex.ja}</p>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </section>
+
+          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 lg:col-span-5">
+            <h3 class="border-b border-slate-100 pb-3 text-base font-bold text-slate-900">🌿 語源・由来 (Etymology)</h3>
+            ${isDeepPending ? renderSkeletonBox('接頭辞・語根の分解と歴史的ストーリーを作成中...') : `
+              <div class="mt-4 space-y-4">
+                <div class="text-xs text-slate-500">由来: <strong class="text-slate-800">${entry.etymology?.originLanguage || ''}</strong></div>
+                <div class="space-y-2">
+                  ${(entry.etymology?.breakdown || []).map(b => `
+                    <div class="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
+                      <div>
+                        <span class="text-[11px] font-bold text-indigo-700">${b.role}</span>
+                        <p class="font-mono text-base font-bold text-indigo-950">${b.part}</p>
+                      </div>
+                      <div class="text-right text-xs font-semibold text-slate-700">${b.meaning}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-3.5">
+                  <div class="text-xs font-bold text-amber-900">🧭 コアイメージ</div>
+                  <p class="mt-1 text-sm font-bold text-amber-950">${entry.etymology?.coreImage || ''}</p>
+                </div>
+                <div class="rounded-xl bg-slate-50 p-4">
+                  <p class="text-xs font-semibold text-slate-500">歴史的ニュアンス・成り立ち</p>
+                  <p class="mt-1.5 text-sm leading-relaxed text-slate-700">${entry.etymology?.history || ''}</p>
+                </div>
+              </div>
+            `}
+          </section>
+        </div>
+
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 lg:col-span-5">
+            <h3 class="border-b border-slate-100 pb-3 text-base font-bold text-slate-900">🔗 他の品詞の形・関連する前置詞</h3>
+            ${isDeepPending ? renderSkeletonBox('派生語とよく使われる前置詞・コロケーションを作成中...') : `
+              <div class="mt-4 space-y-4">
+                <div class="space-y-2">
+                  <p class="text-xs font-semibold text-slate-500">派生語・品詞展開</p>
+                  ${(entry.derivatives?.forms || []).map(f => `
+                    <div class="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50 px-3.5 py-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="rounded bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-800">${f.partOfSpeech}</span>
+                        <button onclick="triggerSearch('${f.word.replace(/'/g, "\\'")}')" class="font-semibold text-indigo-700 hover:underline">${f.word} ↗</button>
+                      </div>
+                      <span class="text-xs text-slate-600">${f.jaMeaning}</span>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="space-y-2">
+                  <p class="text-xs font-semibold text-slate-500">関連する前置詞・コロケーション</p>
+                  ${(entry.derivatives?.collocations || []).map(c => `
+                    <div class="rounded-xl border border-indigo-100 bg-indigo-50/30 p-3.5">
+                      <div class="flex items-center justify-between">
+                        <span class="font-mono text-sm font-bold text-indigo-950">${c.phrase}</span>
+                        ${c.preposition ? `<span class="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700">前置詞: ${c.preposition}</span>` : ''}
+                      </div>
+                      <p class="mt-1 text-xs text-slate-700">${c.meaning}</p>
+                      ${c.example ? `<p class="mt-1 font-mono text-xs text-slate-500">例: ${c.example}</p>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `}
+          </section>
+
+          <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6 lg:col-span-7">
+            <h3 class="border-b border-slate-100 pb-3 text-base font-bold text-slate-900">⚖️ 類義語・対義語とニュアンスの使い分け</h3>
+            ${isDeepPending ? renderSkeletonBox('類義語・対義語の微妙なニュアンスと使い分けを作成中...') : `
+              <div class="mt-4 space-y-5">
+                <div class="space-y-2.5">
+                  <span class="rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">類義語 (Synonyms)</span>
+                  ${(entry.relations?.synonyms || []).map(s => `
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                      <div class="flex items-center justify-between">
+                        <button onclick="triggerSearch('${s.word.split('/')[0].trim().replace(/'/g, "\\'")}')" class="text-base font-bold text-indigo-700 hover:underline">${s.word} ↗</button>
+                        <span class="text-xs font-semibold text-slate-600">${s.jaMeaning}</span>
+                      </div>
+                      <p class="mt-1.5 text-xs leading-relaxed text-slate-700 sm:text-sm">${s.nuance}</p>
+                    </div>
+                  `).join('')}
+                </div>
+                <div class="space-y-2.5">
+                  <span class="rounded-lg bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-800">対義語 (Antonyms)</span>
+                  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    ${(entry.relations?.antonyms || []).map(a => `
+                      <div class="rounded-xl border border-rose-100 bg-rose-50/30 p-3.5">
+                        <div class="flex items-center justify-between">
+                          <button onclick="triggerSearch('${a.word.split('/')[0].trim().replace(/'/g, "\\'")}')" class="font-bold text-rose-900 hover:underline">${a.word} ↗</button>
+                          <span class="text-xs text-rose-700">${a.jaMeaning}</span>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-600">${a.nuance}</p>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            `}
+          </section>
+        </div>
+
+        ${renderWritingPracticeSection(entry, isDeepPending)}
+
+        <!-- 7. 最下部：マイ学習メモ（すべての詳細解説と作文コーナーの下＝詳細画面の一番下にのみ配置） -->
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-900">📝 マイ学習メモ</h3>
+          </div>
+          <div class="mt-3">
+            <textarea
+              id="detail-memo-input"
+              rows="3"
+              oninput="handleDetailMemoInput(this.value)"
+              placeholder="メモ..."
+              class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm leading-relaxed text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/15"
+            >${escapeHtmlText(getDraftMemo(entry.word))}</textarea>
+          </div>
+        </section>
+      `;
+
+      if (hadMemoFocus) {
+        const nextMemoEl = document.getElementById('detail-memo-input');
+        if (nextMemoEl) {
+          nextMemoEl.focus();
+          if (typeof prevSelStart === 'number' && typeof prevSelEnd === 'number') {
+            try {
+              nextMemoEl.setSelectionRange(prevSelStart, prevSelEnd);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      } else if (hadWritingFocus) {
+        const nextWritingEl = document.getElementById('writing-practice-input');
+        if (nextWritingEl) {
+          nextWritingEl.focus();
+          if (typeof prevWritingSelStart === 'number' && typeof prevWritingSelEnd === 'number') {
+            try {
+              nextWritingEl.setSelectionRange(prevWritingSelStart, prevWritingSelEnd);
+            } catch {
+              // ignore
+            }
+          }
+        }
+      }
+    }
+
+    function renderPresets() {
+      const box = document.getElementById('preset-chips');
+      box.innerHTML = PRESET_WORDS.map(w => `
+        <button type="button" onclick="triggerSearch('${w}')" class="rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+          currentWord.toLowerCase() === w ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-indigo-50'
+        }">${w}</button>
+      `).join('');
+    }
+
+    function renderHistory() {
+      const box = document.getElementById('history-bar');
+      box.innerHTML = `<span class="text-xs text-slate-400 mr-1">🕒 履歴:</span>` + historyList.map(w => `
+        <button type="button" onclick="triggerSearch('${w.replace(/'/g, "\\'")}')" class="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-600 hover:border-indigo-300">${escapeHtmlText(w)}</button>
+      `).join('');
+    }
+
+    async function triggerSearch(word, forceAi = false, skipUnsavedCheck = false) {
+      const q = (word || '').trim().toLowerCase();
+      if (!q || isLoading) return;
+
+      // 別の単語を検索しようとした際、現在の単語がまだ未保存なら確認ダイアログを表示
+      if (
+        !skipUnsavedCheck &&
+        !forceAi &&
+        q !== currentWord.toLowerCase() &&
+        isCurrentWordUnsaved()
+      ) {
+        openUnsavedConfirmModal(() => triggerSearch(q, forceAi, true));
+        return;
+      }
+
+      showError('');
+      historyList = [q, ...historyList.filter(item => item !== q)].slice(0, 8);
+
+      // 1. 強制AI再生成でない場合、プリセット辞書またはAIキャッシュがあれば 0秒で即時表示して完了！
+      if (!forceAi) {
+        if (MOCK_DB[q]) {
+          renderEntry(MOCK_DB[q], false, 'done');
+          return;
+        }
+        const cached = getCachedAiEntry(q);
+        if (cached) {
+          renderEntry(cached, true, 'done');
+          return;
+        }
+      }
+
+      const apiKey = getSavedKey();
+
+      // 2. APIキーがある場合はダミーテンプレートを出さず、各カード内に「作成中...」アニメーションを表示して2段階並列生成！
+      if (apiKey) {
+        let workingEntry = buildFallback(q);
+        renderEntry(workingEntry, false, 'stage1');
+        setLoadingState(true, q, `🚀 「${q}」の発音・意味・語源・ニュアンスをAIが作成中です...`);
+
+        const fastPromise = fetchFastCoreFromGemini(q, apiKey);
+        const deepPromise = fetchDeepAnalysisFromGemini(q, apiKey);
+
+        try {
+          // 第1便が到着したら即座に【発音・意味・例文】だけを表示し、下の3カードは「作成中...」を継続
+          const fastData = await fastPromise;
+          workingEntry = {
+            ...workingEntry,
+            word: fastData.word || q,
+            source: 'ai',
+            pronunciation: fastData.pronunciation || workingEntry.pronunciation,
+            meanings: fastData.meanings || workingEntry.meanings
+          };
+          renderEntry(workingEntry, false, 'stage2');
+          setLoadingState(true, q, `✨ 発音・意味・例文が完成しました！ 続いて語源・派生語・類義語のニュアンスを作成中です...`);
+
+          // 第2便が到着したら全カードを完成させてキャッシュ保存
+          const deepData = await deepPromise;
+          const fullAiEntry = {
+            ...workingEntry,
+            source: 'ai',
+            etymology: deepData.etymology || workingEntry.etymology,
+            derivatives: deepData.derivatives || workingEntry.derivatives,
+            relations: deepData.relations || workingEntry.relations,
+            writingChallenge: deepData.writingChallenge || workingEntry.writingChallenge
+          };
+          saveCachedAiEntry(fullAiEntry);
+          setLoadingState(false, q);
+          renderEntry(fullAiEntry, false, 'done');
+          return;
+        } catch (err) {
+          setLoadingState(false, q);
+          showError(`AI取得エラー: ${err.message || err}`);
+          renderEntry(MOCK_DB[q] || buildFallback(q), false, 'done');
+          return;
+        }
+      }
+
+      // APIキー未設定時のみ簡易フォールバック表示
+      renderEntry(MOCK_DB[q] || buildFallback(q), false, 'done');
+    }
+
+    document.getElementById('search-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      triggerSearch(document.getElementById('search-input').value);
+    });
+
+    document.getElementById('clear-input-btn').addEventListener('click', () => {
+      document.getElementById('search-input').value = '';
+      document.getElementById('search-input').focus();
+    });
+
+    document.getElementById('open-api-modal-btn').addEventListener('click', () => {
+      document.getElementById('api-key-input').value = getSavedKey();
+      document.getElementById('api-modal').classList.remove('hidden');
+    });
+    document.getElementById('close-modal-btn').addEventListener('click', () => {
+      document.getElementById('api-modal').classList.add('hidden');
+    });
+    document.getElementById('clear-key-btn').addEventListener('click', () => {
+      document.getElementById('api-key-input').value = '';
+      setSavedKey('');
+      document.getElementById('api-modal').classList.add('hidden');
+      showError('');
+      renderEntry(MOCK_DB[currentWord] || buildFallback(currentWord));
+    });
+    document.getElementById('api-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newKey = document.getElementById('api-key-input').value.trim();
+      setSavedKey(newKey);
+      document.getElementById('api-modal').classList.add('hidden');
+      if (newKey && currentWord) {
+        triggerSearch(currentWord, false, true);
+      }
+    });
+
+    // Delete & Unsaved modal event bindings
+    document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteConfirmModal);
+    document.getElementById('confirm-delete-btn').addEventListener('click', executeRemoveWordFromSaved);
+    document.getElementById('cancel-unsaved-btn').addEventListener('click', closeUnsavedConfirmModal);
+    document.getElementById('back-unsaved-btn').addEventListener('click', closeUnsavedConfirmModal);
+    document.getElementById('proceed-without-save-btn').addEventListener('click', proceedWithoutSaving);
+
+    // ブラウザ・タブを閉じようとした際、現在の単語が未保存なら確認ダイアログを表示
+    window.addEventListener('beforeunload', (e) => {
+      if (activeMainView === 'search' && isCurrentWordUnsaved()) {
+        e.preventDefault();
+        e.returnValue = '現在表示中の単語がまだ保存されていません。このまま閉じてもよろしいですか？';
+        return e.returnValue;
+      }
+    });
+
+    function loadSyncConfig() {
+      try {
+        const raw = localStorage.getItem(SYNC_CONFIG_STORAGE);
+        if (!raw) return { profileId: 'haruna', githubToken: '', gistId: '', familyPasscode: '', lastSyncedAt: '' };
+        const parsed = JSON.parse(raw);
+        return {
+          profileId: (parsed.profileId || 'haruna').trim().toLowerCase(),
+          githubToken: (parsed.githubToken || '').trim(),
+          gistId: (parsed.gistId || '').trim(),
+          familyPasscode: (parsed.familyPasscode || '').trim(),
+          lastSyncedAt: parsed.lastSyncedAt || ''
+        };
+      } catch {
+        return { profileId: 'haruna', githubToken: '', gistId: '', familyPasscode: '', lastSyncedAt: '' };
+      }
+    }
+
+    function saveSyncConfig(cfg) {
+      try {
+        localStorage.setItem(SYNC_CONFIG_STORAGE, JSON.stringify(cfg));
+      } catch {
+        // ignore
+      }
+      updateSyncStatusBadge();
+    }
+
+    function getProfileGistFilename(profileId) {
+      const safeId = String(profileId || 'haruna').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_') || 'haruna';
+      return `myenglish_profile_${safeId}.json`;
+    }
+
+    function updateSyncStatusBadge() {
+      const cfg = loadSyncConfig();
+      const dot = document.getElementById('sync-status-dot');
+      const label = document.getElementById('sync-status-label');
+      const statusText = document.getElementById('sync-gist-status-text');
+      if (dot && label) {
+        if (cfg.githubToken) {
+          dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+          label.textContent = `☁️ ${cfg.profileId} (同期ON)`;
+        } else {
+          dot.className = 'h-2 w-2 rounded-full bg-indigo-400';
+          label.textContent = `👤 ${cfg.profileId}`;
+        }
+      }
+      if (statusText) {
+        if (cfg.githubToken) {
+          statusText.textContent = `✅ クラウド自動同期ON（ユーザー: ${cfg.profileId}${cfg.lastSyncedAt ? ` / 最終同期: ${cfg.lastSyncedAt}` : ''}）`;
+        } else {
+          statusText.textContent = `端末内ローカル保存モード（ユーザー: ${cfg.profileId}）`;
+        }
+      }
+    }
+
+    function showSyncFeedback(msg, isError = false) {
+      const el = document.getElementById('sync-feedback-msg');
+      if (!el) return;
+      if (!msg) {
+        el.classList.add('hidden');
+        el.textContent = '';
+        return;
+      }
+      el.classList.remove('hidden');
+      el.className = isError
+        ? 'rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-semibold text-rose-800'
+        : 'rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-800';
+      el.textContent = msg;
+    }
+
+    function openSyncModal() {
+      const cfg = loadSyncConfig();
+      const profInput = document.getElementById('sync-profile-input');
+      const tokenInput = document.getElementById('sync-token-input');
+      const passInput = document.getElementById('sync-passcode-input');
+      if (profInput) profInput.value = cfg.profileId || 'haruna';
+      if (tokenInput) tokenInput.value = cfg.githubToken || '';
+      if (passInput) passInput.value = cfg.familyPasscode || '';
+      showSyncFeedback('');
+      updateSyncStatusBadge();
+      document.getElementById('sync-modal').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('sync-modal').classList.add('hidden');
+    }
+
+    function buildLocalProfileBundle() {
+      return {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        savedWords: loadSavedWordsMap(),
+        draftMemos: loadDraftMemosMap(),
+        writingRecords: loadWritingRecordsMap()
+      };
+    }
+
+    function mergeAndApplyCloudBundle(cloudBundle) {
+      if (!cloudBundle || typeof cloudBundle !== 'object') return;
+      const localWords = loadSavedWordsMap();
+      const remoteWords = (cloudBundle.savedWords && typeof cloudBundle.savedWords === 'object') ? cloudBundle.savedWords : {};
+      const mergedWords = { ...localWords };
+
+      // 単語ごとに updatedAt が新しい方を優先し、復習回数(reviewCount)やMaster昇格(isMastered)は最大値を引き継ぐ安全マージ
+      for (const key of Object.keys(remoteWords)) {
+        const rItem = remoteWords[key];
+        const lItem = mergedWords[key];
+        if (!lItem) {
+          mergedWords[key] = rItem;
+        } else {
+          const rTime = new Date(rItem.updatedAt || 0).getTime();
+          const lTime = new Date(lItem.updatedAt || 0).getTime();
+          const newer = rTime >= lTime ? rItem : lItem;
+          const maxRev = Math.max(Number(rItem.reviewCount || 0), Number(lItem.reviewCount || 0));
+          const isMastered = Boolean(rItem.isMastered || lItem.isMastered);
+          mergedWords[key] = {
+            ...newer,
+            reviewCount: maxRev,
+            lastReviewedDate: rItem.lastReviewedDate && lItem.lastReviewedDate
+              ? (rItem.lastReviewedDate >= lItem.lastReviewedDate ? rItem.lastReviewedDate : lItem.lastReviewedDate)
+              : (rItem.lastReviewedDate || lItem.lastReviewedDate),
+            isMastered,
+            masteredDate: rItem.masteredDate || lItem.masteredDate
+          };
+        }
+      }
+
+      try {
+        localStorage.setItem(SAVED_WORDS_STORAGE, JSON.stringify(mergedWords));
+        if (cloudBundle.draftMemos && typeof cloudBundle.draftMemos === 'object') {
+          const mergedMemos = { ...cloudBundle.draftMemos, ...loadDraftMemosMap() };
+          localStorage.setItem(DRAFT_MEMOS_STORAGE, JSON.stringify(mergedMemos));
+        }
+        if (cloudBundle.writingRecords && typeof cloudBundle.writingRecords === 'object') {
+          const mergedWriting = { ...cloudBundle.writingRecords, ...loadWritingRecordsMap() };
+          localStorage.setItem(WRITING_RECORDS_STORAGE, JSON.stringify(mergedWriting));
+        }
+      } catch {
+        // ignore
+      }
+
+      updateSavedCountBadge();
+      if (activeMainView === 'vocabulary') {
+        renderVocabularyView();
+      } else if (activeMainView === 'search') {
+        renderEntry(currentEntryObj, currentIsCached, currentLoadingStage);
+      }
+    }
+
+    async function findOrCreateSyncGist(cfg) {
+      const headers = {
+        'Authorization': `Bearer ${cfg.githubToken}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
+
+      if (cfg.gistId) {
+        const checkRes = await fetch(`https://api.github.com/gists/${cfg.gistId}`, { headers });
+        if (checkRes.ok) {
+          return await checkRes.json();
+        }
+      }
+
+      // 既存の Secret Gist から MyEnglish_Family_Cloud_Sync_v1 を探す
+      const listRes = await fetch('https://api.github.com/gists?per_page=50', { headers });
+      if (!listRes.ok) {
+        throw new Error(`GitHub認証エラー (HTTP ${listRes.status}): トークンに gist 権限があるか確認してください。`);
+      }
+      const gists = await listRes.json();
+      const found = Array.isArray(gists) ? gists.find(g => g.description === GIST_DESCRIPTION_TAG) : null;
+      if (found) {
+        const detailRes = await fetch(`https://api.github.com/gists/${found.id}`, { headers });
+        if (detailRes.ok) {
+          return await detailRes.json();
+        }
+      }
+
+      // 見つからなければ新しく非公開 Secret Gist を自動作成
+      const filename = getProfileGistFilename(cfg.profileId);
+      const createRes = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          description: GIST_DESCRIPTION_TAG,
+          public: false,
+          files: {
+            [filename]: {
+              content: JSON.stringify(buildLocalProfileBundle(), null, 2)
+            }
+          }
+        })
+      });
+      if (!createRes.ok) {
+        throw new Error(`Gist作成失敗 (HTTP ${createRes.status})`);
+      }
+      return await createRes.json();
+    }
+
+    async function syncWithCloudNow(mode = 'both') {
+      const cfg = loadSyncConfig();
+      if (!cfg.githubToken || isCloudSyncing) return false;
+      isCloudSyncing = true;
+      try {
+        const gist = await findOrCreateSyncGist(cfg);
+        cfg.gistId = gist.id;
+        const filename = getProfileGistFilename(cfg.profileId);
+        const fileObj = gist.files && gist.files[filename];
+
+        if ((mode === 'pull' || mode === 'both') && fileObj && fileObj.content) {
+          try {
+            const remoteBundle = JSON.parse(fileObj.content);
+            mergeAndApplyCloudBundle(remoteBundle);
+          } catch {
+            // ignore parse error
+          }
+        }
+
+        if (mode === 'push' || mode === 'both') {
+          const headers = {
+            'Authorization': `Bearer ${cfg.githubToken}`,
+            'Accept': 'application/vnd.github+json',
+            'Content-Type': 'application/json'
+          };
+          await fetch(`https://api.github.com/gists/${gist.id}`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({
+              files: {
+                [filename]: {
+                  content: JSON.stringify(buildLocalProfileBundle(), null, 2)
+                }
+              }
+            })
+          });
+        }
+
+        const nowTimeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        cfg.lastSyncedAt = nowTimeStr;
+        saveSyncConfig(cfg);
+        return true;
+      } finally {
+        isCloudSyncing = false;
+      }
+    }
+
+    function scheduleCloudPush() {
+      const cfg = loadSyncConfig();
+      if (!cfg.githubToken) return;
+      if (cloudSyncDebounceTimer) clearTimeout(cloudSyncDebounceTimer);
+      cloudSyncDebounceTimer = setTimeout(() => {
+        syncWithCloudNow('push').catch(() => {});
+      }, 1500);
+    }
+
+    async function saveSyncSettingsAndSync(e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const prevCfg = loadSyncConfig();
+      const newProfile = (document.getElementById('sync-profile-input').value || 'haruna').trim().toLowerCase();
+      const newToken = (document.getElementById('sync-token-input').value || '').trim();
+      const newPass = (document.getElementById('sync-passcode-input').value || '').trim();
+
+      const nextCfg = {
+        ...prevCfg,
+        profileId: newProfile,
+        githubToken: newToken,
+        familyPasscode: newPass
+      };
+      saveSyncConfig(nextCfg);
+      if (newPass) {
+        localStorage.setItem(FAMILY_UNLOCKED_STORAGE, newPass);
+      }
+
+      if (!newToken) {
+        showSyncFeedback(`✅ ユーザー「${newProfile}」の設定を保存しました（端末内保存モード）`);
+        return;
+      }
+
+      const btn = document.getElementById('sync-save-btn');
+      if (btn) btn.textContent = '⏳ クラウド同期中...';
+      try {
+        await syncWithCloudNow('both');
+        showSyncFeedback(`🎉 ユーザー「${newProfile}」のクラウド同期が完了しました！MacとiPhoneで同じ名前・トークンを入れると自動同期されます！`);
+      } catch (err) {
+        showSyncFeedback(`⚠️ 同期エラー: ${err.message || err}`, true);
+      } finally {
+        if (btn) btn.textContent = '💾 設定を保存して今すぐ同期';
+      }
+    }
+
+    async function triggerManualCloudPull() {
+      const cfg = loadSyncConfig();
+      if (!cfg.githubToken) {
+        showSyncFeedback('⚠️ 先にGitHubトークンを入力して保存してください。', true);
+        return;
+      }
+      showSyncFeedback('⏳ クラウドから最新データを取得中...');
+      try {
+        await syncWithCloudNow('both');
+        showSyncFeedback(`✅ クラウドから「${cfg.profileId}」の最新データを同期しました！`);
+      } catch (err) {
+        showSyncFeedback(`⚠️ 取得エラー: ${err.message || err}`, true);
+      }
+    }
+
+    function exportUserDataJson() {
+      const cfg = loadSyncConfig();
+      const bundle = buildLocalProfileBundle();
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `myenglish_backup_${cfg.profileId}_${formatLocalDateYmd()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showSyncFeedback('📤 バックアップファイルをダウンロードしました！');
+    }
+
+    function importUserDataJson(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(String(e.target?.result || ''));
+          mergeAndApplyCloudBundle(parsed);
+          scheduleCloudPush();
+          showSyncFeedback('📥 バックアップデータを復元・統合しました！');
+        } catch {
+          showSyncFeedback('⚠️ ファイルの読み込みに失敗しました。正しいJSONファイルを選択してください。', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function checkFamilyPasscodeLock() {
+      const cfg = loadSyncConfig();
+      if (!cfg.familyPasscode) return;
+      const unlocked = localStorage.getItem(FAMILY_UNLOCKED_STORAGE);
+      if (unlocked !== cfg.familyPasscode) {
+        document.getElementById('family-lock-overlay').classList.remove('hidden');
+      }
+    }
+
+    function unlockFamilyScreen(e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const cfg = loadSyncConfig();
+      const val = (document.getElementById('family-unlock-input').value || '').trim();
+      const errEl = document.getElementById('family-unlock-error');
+      if (val === cfg.familyPasscode) {
+        localStorage.setItem(FAMILY_UNLOCKED_STORAGE, val);
+        document.getElementById('family-lock-overlay').classList.add('hidden');
+        if (errEl) errEl.classList.add('hidden');
+      } else {
+        if (errEl) errEl.classList.remove('hidden');
+      }
+    }
+
+    // Initial render
+    updateApiStatusBadge();
+    updateSyncStatusBadge();
+    updateSavedCountBadge();
+    checkFamilyPasscodeLock();
+    renderEntry(MOCK_DB.ubiquitous);
+    // 起動時にクラウド同期が有効なら最新データをバックグラウンドで自動取得
+    syncWithCloudNow('both').catch(() => {});
+  </script>
+</body>
+</html>
